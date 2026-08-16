@@ -1,15 +1,10 @@
-RYVEX ESPORTS WEBSITE 1.1
+RYVEX ESPORTS WEBSITE 1.2
 
-Vylepšená verze webu s jednotnějším premium dark/gold UI.
-
-Obsah:
-- zachovaný hero nápis vlevo
-- propojenější pozadí a panely ve stylu appky
-- vylepšený Match Center
-- upravené Team Cards
-- kompaktnější Stats / Stream / App / Recruitment sekce
-- lepší mobilní i desktop layout
+Hotfix / visual update:
+- hero logo vpravo bez bílého boxu
+- transparentní logo zapuštěné do tmavého gold-glow pozadí ve stylu RYVEX App
+- ticker doplněn o PCG LEAGUE, PRESTIGE LIGA a VPG LEAGUE
+- zachovaný ONE CLUB. ONE TEAM. ONE LEGACY. headline
 
 Nasazení:
-Stačí nahrát obsah repozitáře do GitHub repa RYVEX-WEBSITE.
-Cloudflare Pages změny nasadí automaticky.
+Nahraj obsah balíku do GitHub repozitáře RYVEX-WEBSITE a potvrď Commit changes. Cloudflare Pages nasadí změny automaticky.
