@@ -1,10 +1,8 @@
-RYVEX ESPORTS WEBSITE 1.2
+# RYVEX Esports Website 1.4
 
-Hotfix / visual update:
-- hero logo vpravo bez bílého boxu
-- transparentní logo zapuštěné do tmavého gold-glow pozadí ve stylu RYVEX App
-- ticker doplněn o PCG LEAGUE, PRESTIGE LIGA a VPG LEAGUE
-- zachovaný ONE CLUB. ONE TEAM. ONE LEGACY. headline
-
-Nasazení:
-Nahraj obsah balíku do GitHub repozitáře RYVEX-WEBSITE a potvrď Commit changes. Cloudflare Pages nasadí změny automaticky.
+UI hotfix podle desktop/app referencí:
+- header: čistý transparentní klubový emblém bez boxu
+- hero: velký emblém jako součást pozadí, ne samostatná karta
+- hero ticker je vizuálně propojený s hero panelem
+- Match Center používá stejný čistý transparentní emblém
+- zachovány PCG League, Prestige Liga a VPG League v tickeru
