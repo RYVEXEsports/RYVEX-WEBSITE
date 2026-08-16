@@ -3,16 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#070707" />
+  <meta name="theme-color" content="#060606" />
   <meta name="description" content="Oficiální web RYVEX Esports." />
   <title>RYVEX Esports</title>
   <link rel="icon" href="assets/ryvex-logo.jpeg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-orb orb-c"></div>
   <div class="noise"></div>
 
-  <header class="topbar">
+  <header class="topbar" id="top">
     <a class="brand" href="#home" aria-label="RYVEX Esports – domů">
       <img src="assets/ryvex-logo.jpeg" alt="RYVEX Esports logo" />
       <div>
@@ -33,11 +36,8 @@
     </nav>
   </header>
 
-  <main>
-    <section class="hero section" id="home">
-      <div class="hero-glow glow-one"></div>
-      <div class="hero-glow glow-two"></div>
-
+  <main class="page-shell">
+    <section class="hero panel panel-hero" id="home">
       <div class="hero-copy reveal">
         <div class="eyebrow">FC PRO CLUBS • COMPETITIVE ESPORTS</div>
         <h1>ONE CLUB.<br><span>ONE TEAM.</span><br>ONE LEGACY.</h1>
@@ -52,18 +52,21 @@
       </div>
 
       <div class="hero-mark reveal">
-        <div class="crest-wrap">
-          <img src="assets/ryvex-logo.jpeg" alt="RYVEX Esports znak" />
+        <div class="crest-shell">
+          <div class="crest-wrap">
+            <img src="assets/ryvex-logo.jpeg" alt="RYVEX Esports znak" />
+          </div>
+          <div class="crest-grid"></div>
         </div>
-        <div class="since">EST. 2026</div>
+        <div class="since">EST. 2026 • RYVEX ESPORTS</div>
       </div>
     </section>
 
-    <section class="ticker" aria-label="RYVEX informace">
+    <section class="ticker panel panel-thin" aria-label="RYVEX informace">
       <div>RYVEX ESPORTS</div><span>◆</span>
       <div>FC PRO CLUBS</div><span>◆</span>
       <div>COMPETE • EVOLVE • DOMINATE</div><span>◆</span>
-      <div>RYVEX ESPORTS</div>
+      <div>ONE CLUB • ONE TEAM • ONE LEGACY</div>
     </section>
 
     <section class="section" id="matches">
@@ -75,38 +78,40 @@
         <span class="status-pill">SCHEDULE PENDING</span>
       </div>
 
-      <div class="match-card reveal">
-        <div class="team-side">
-          <img src="assets/ryvex-logo.jpeg" alt="RYVEX logo" />
-          <strong>RYVEX</strong>
-          <span>ESPORTS</span>
+      <div class="match-shell reveal panel">
+        <div class="match-card-main">
+          <div class="team-side ryvex-side">
+            <img src="assets/ryvex-logo.jpeg" alt="RYVEX logo" />
+            <strong>RYVEX</strong>
+            <span>ESPORTS</span>
+          </div>
+
+          <div class="match-meta">
+            <small>NEXT FIXTURE</small>
+            <div class="vs">VS</div>
+            <p>Soupeř bude doplněn</p>
+            <div class="match-time">TBA • ONLINE</div>
+          </div>
+
+          <div class="team-side opponent">
+            <div class="opponent-mark">?</div>
+            <strong>OPPONENT</strong>
+            <span>COMING SOON</span>
+          </div>
         </div>
 
-        <div class="match-meta">
-          <small>NEXT FIXTURE</small>
-          <div class="vs">VS</div>
-          <p>Soupeř bude doplněn</p>
-          <div class="match-time">TBA • ONLINE</div>
+        <div class="results-grid">
+          <article class="result-card">
+            <div><span class="badge">RESULT</span><span class="muted">Placeholder</span></div>
+            <strong>RYVEX <b>–</b> OPPONENT</strong>
+            <small>Výsledek doplníme z Manageru / administrace.</small>
+          </article>
+          <article class="result-card">
+            <div><span class="badge">TOURNAMENT</span><span class="muted">Upcoming</span></div>
+            <strong>COMING SOON</strong>
+            <small>Turnajový kalendář připravený pro napojení.</small>
+          </article>
         </div>
-
-        <div class="team-side opponent">
-          <div class="opponent-mark">?</div>
-          <strong>OPPONENT</strong>
-          <span>COMING SOON</span>
-        </div>
-      </div>
-
-      <div class="results-grid">
-        <article class="result-card reveal">
-          <div><span class="badge">RESULT</span><span class="muted">Placeholder</span></div>
-          <strong>RYVEX <b>–</b> OPPONENT</strong>
-          <small>Výsledek doplníme z Manageru / administrace.</small>
-        </article>
-        <article class="result-card reveal">
-          <div><span class="badge">TOURNAMENT</span><span class="muted">Upcoming</span></div>
-          <strong>COMING SOON</strong>
-          <small>Turnajový kalendář připravený pro napojení.</small>
-        </article>
       </div>
     </section>
 
@@ -116,7 +121,7 @@
           <div class="eyebrow">ROSTER</div>
           <h2>Meet the squad</h2>
         </div>
-        <p class="section-note">Karty jsou připravené pro aktuální soupisku.</p>
+        <p class="section-note">Karty jsou připravené pro aktuální soupisku a pozice týmu.</p>
       </div>
 
       <div class="roster-grid" id="rosterGrid"></div>
@@ -130,16 +135,18 @@
         </div>
       </div>
 
-      <div class="stats-grid">
-        <article class="stat reveal"><span>01</span><strong>SEASONS</strong><small>Competitive journey</small></article>
-        <article class="stat reveal"><span>00</span><strong>WINS</strong><small>Napojíme na výsledky</small></article>
-        <article class="stat reveal"><span>00</span><strong>GOALS</strong><small>Automatické klubové statistiky</small></article>
-        <article class="stat reveal"><span>00</span><strong>MVP</strong><small>Player performance</small></article>
+      <div class="stats-shell panel reveal">
+        <div class="stats-grid">
+          <article class="stat"><span>01</span><strong>SEASONS</strong><small>Competitive journey</small></article>
+          <article class="stat"><span>00</span><strong>WINS</strong><small>Napojíme na výsledky</small></article>
+          <article class="stat"><span>00</span><strong>GOALS</strong><small>Automatické klubové statistiky</small></article>
+          <article class="stat"><span>00</span><strong>MVP</strong><small>Player performance</small></article>
+        </div>
       </div>
     </section>
 
-    <section class="section split" id="stream">
-      <div class="feature reveal">
+    <section class="section split-stream" id="stream">
+      <div class="feature panel reveal">
         <div class="eyebrow">LIVE CENTER</div>
         <h2>Watch RYVEX live.</h2>
         <p>
@@ -149,7 +156,7 @@
         <a class="btn btn-primary" href="#" aria-disabled="true">YouTube channel</a>
       </div>
 
-      <div class="stream-frame reveal">
+      <div class="stream-frame panel reveal">
         <div class="live-dot"><span></span> OFFLINE</div>
         <div class="stream-placeholder">
           <div class="play">▶</div>
@@ -159,9 +166,9 @@
       </div>
     </section>
 
-    <section class="section app-section" id="app">
-      <div class="app-card reveal">
-        <div>
+    <section class="section" id="app">
+      <div class="app-shell panel reveal">
+        <div class="app-copy">
           <div class="eyebrow">CLUB ECOSYSTEM</div>
           <h2>RYVEX App</h2>
           <p>
@@ -172,12 +179,25 @@
             <span>PWA</span><span>MOBILE</span><span>24/7</span>
           </div>
         </div>
-        <a class="btn btn-primary" href="#" aria-disabled="true">Open RYVEX App</a>
+        <div class="app-preview">
+          <div class="phone-mock">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="mini-badge">RYVEX APP</div>
+              <div class="mini-title">Club center</div>
+              <div class="mini-cards">
+                <div></div><div></div><div></div>
+              </div>
+              <div class="mini-footer">chat • lineup • voice • matchday</div>
+            </div>
+          </div>
+          <a class="btn btn-primary" href="#" aria-disabled="true">Open RYVEX App</a>
+        </div>
       </div>
     </section>
 
     <section class="section" id="join">
-      <div class="join-panel reveal">
+      <div class="join-panel panel reveal">
         <div>
           <div class="eyebrow">RECRUITMENT</div>
           <h2>Ready to wear the R?</h2>
@@ -191,7 +211,7 @@
     </section>
   </main>
 
-  <footer>
+  <footer class="footer-wrap">
     <div class="footer-brand">
       <img src="assets/ryvex-logo.jpeg" alt="" />
       <div><strong>RYVEX ESPORTS</strong><span>ONE CLUB. ONE LEGACY.</span></div>

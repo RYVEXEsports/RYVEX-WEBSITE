@@ -1,8 +1,8 @@
 const players = [
-  { name: "PLAYER 01", role: "OWNER / PLAYER", pos: "SO / HU" },
-  { name: "PLAYER 02", role: "COACH / PLAYER", pos: "POSITION" },
-  { name: "PLAYER 03", role: "COACH / PLAYER", pos: "POSITION" },
-  { name: "PLAYER 04", role: "PLAYER", pos: "POSITION" },
+  { name: "AINSLEYCZ", role: "OWNER / PLAYER", pos: "SO / HU" },
+  { name: "MAAAGNATEK", role: "COACH / PLAYER", pos: "SZ" },
+  { name: "RODRIGO", role: "COACH / PLAYER", pos: "SOZ" },
+  { name: "ČEJKYS", role: "PLAYER", pos: "POZ" },
   { name: "PLAYER 05", role: "PLAYER", pos: "POSITION" },
   { name: "PLAYER 06", role: "PLAYER", pos: "POSITION" },
   { name: "PLAYER 07", role: "PLAYER", pos: "POSITION" },
@@ -11,11 +11,17 @@ const players = [
 
 const rosterGrid = document.getElementById("rosterGrid");
 players.forEach((p, i) => {
-  const initials = p.name.split(" ").map(x => x[0]).join("").slice(0, 2);
+  const initials = p.name
+    .split(" ")
+    .map(x => x[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   const card = document.createElement("article");
   card.className = "player-card reveal";
   card.innerHTML = `
-    <div class="number">#${String(i + 1).padStart(2,"0")}</div>
+    <div class="number">#${String(i + 1).padStart(2, "0")}</div>
     <div class="avatar">${initials}</div>
     <h3>${p.name}</h3>
     <p>${p.role} • ${p.pos}</p>
@@ -31,7 +37,10 @@ toggle.addEventListener("click", () => {
   nav.classList.toggle("open");
   toggle.setAttribute("aria-expanded", nav.classList.contains("open"));
 });
-nav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => nav.classList.remove("open")));
+nav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+  nav.classList.remove("open");
+  toggle.setAttribute("aria-expanded", "false");
+}));
 
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
