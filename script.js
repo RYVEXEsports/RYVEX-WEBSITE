@@ -204,7 +204,10 @@ async function pullSiteLive() {
     const response = await fetch("/api/site-live", { cache: "no-store", credentials: "same-origin" });
     const state = await response.json();
     if (!response.ok || !state?.ok) throw new Error(state?.error || `HTTP ${response.status}`);
-    renderRoster(state.members || [], true);
+    renderRoster(Array.isArray(state.members) && state.members.length ? state.members : FALLBACK_PLAYERS, Array.isArray(state.members) && state.members.length > 0);
+    if (!Array.isArray(state.members) || !state.members.length) {
+      if (els.rosterNote) els.rosterNote.textContent = "Vybraní členové klubu • kompletní LIVE soupiska je dostupná pouze v Member Zone.";
+    }
     renderStats(state);
     renderMatch(state);
     renderResults(state.results || []);
@@ -290,3 +293,37 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 
 document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+
+async function checkMemberAccess() {
+  const button = document.getElementById("memberGateButton");
+  const title = document.getElementById("memberGateTitle");
+  const text = document.getElementById("memberGateText");
+  const navCta = document.getElementById("memberNavCta");
+  const message = document.getElementById("authMessage");
+
+  const authError = new URLSearchParams(location.search).get("auth");
+  if (message && authError) {
+    const messages = {
+      not_member: "Tento Discord účet není členem RYVEX Esports. Soukromá část zůstává uzamčená.",
+      invalid_state: "Přihlášení vypršelo nebo bylo přerušeno. Zkus ověření znovu.",
+      not_configured: "Member Zone ještě není kompletně nastavená v Cloudflare.",
+      discord_error: "Discord ověření se nepodařilo dokončit. Zkus to znovu."
+    };
+    message.textContent = messages[authError] || "Přihlášení se nepodařilo dokončit.";
+    message.hidden = false;
+    history.replaceState({}, "", `${location.pathname}${location.hash || "#members"}`);
+  }
+
+  try {
+    const response = await fetch("/api/me", { cache: "no-store", credentials: "same-origin" });
+    const data = await response.json();
+    if (!data?.authenticated) return;
+    if (title) title.textContent = `Vítej, ${data.user?.name || "RYVEX member"}`;
+    if (text) text.textContent = "Členství je ověřené. Můžeš vstoupit do soukromé klubové zóny.";
+    if (button) { button.textContent = "Otevřít Member Zone"; button.href = "/members.html"; }
+    if (navCta) { navCta.textContent = "Member Zone ✓"; navCta.href = "/members.html"; }
+  } catch {}
+}
+
+checkMemberAccess();

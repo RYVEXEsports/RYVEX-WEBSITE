@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#060606" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>RYVEX Member Zone</title>
+  <link rel="icon" href="assets/ryvex-emblem.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="member-page">
+  <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div><div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="RYVEX Esports – domů"><img src="assets/ryvex-emblem.png" alt="" /><div><strong>RYVEX</strong><span>MEMBERS</span></div></a>
+    <nav class="member-top-actions"><a href="/">Public web</a><a class="nav-cta" href="/auth/logout">Odhlásit</a></nav>
+  </header>
+
+  <main class="member-shell">
+    <section class="member-hero panel">
+      <div>
+        <div class="eyebrow">PRIVATE CLUB AREA</div>
+        <h1>MEMBER<br><span>ZONE.</span></h1>
+        <p>Interní RYVEX prostor. Data se načítají až po ověření aktivního členství na Discordu.</p>
+      </div>
+      <div class="member-identity" id="memberIdentity"><div class="member-avatar">R</div><div><small>CONNECTED MEMBER</small><strong>Ověřuji účet…</strong><span>RYVEX Esports</span></div></div>
+    </section>
+
+    <section class="member-dashboard" id="memberDashboard" hidden>
+      <div class="member-kpis">
+        <article class="member-kpi panel"><span id="mMembers">—</span><strong>MEMBERS</strong><small>Club roster</small></article>
+        <article class="member-kpi panel"><span id="mOnline">—</span><strong>ONLINE</strong><small>Discord live</small></article>
+        <article class="member-kpi panel"><span id="mWins">—</span><strong>WINS</strong><small>Manager sync</small></article>
+        <article class="member-kpi panel"><span id="mForm">—</span><strong>FORM</strong><small>Recent games</small></article>
+      </div>
+
+      <div class="member-layout">
+        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">CLUB CALENDAR</div><h2>Next events</h2></div><span class="status-pill live-ok">PRIVATE LIVE</span></div><div class="member-list" id="memberEvents"></div></section>
+        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">RYVEX MANAGER</div><h2>Recent results</h2></div></div><div class="member-list" id="memberResults"></div></section>
+      </div>
+
+      <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">ROSTER</div><h2>Club members</h2></div><span class="status-pill" id="memberRosterCount">LIVE</span></div><div class="member-roster" id="memberRoster"></div></section>
+
+      <section class="member-tools">
+        <article class="panel member-tool"><span>01</span><strong>Hlasování</strong><p>Interní týmová hlasování a účast.</p><small>COMING NEXT</small></article>
+        <article class="panel member-tool"><span>02</span><strong>Lineup Studio</strong><p>Sestava, pozice a matchday příprava.</p><small>COMING NEXT</small></article>
+        <article class="panel member-tool"><span>03</span><strong>Club Center</strong><p>Interní panely RYVEX Manageru na webu.</p><small>COMING NEXT</small></article>
+      </section>
+    </section>
+
+    <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS DENIED</div><h2>Přístup není aktivní.</h2><p id="memberErrorText">Pro vstup musí být Discord účet členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login">Ověřit znovu</a></section>
+  </main>
+  <script src="members.js"></script>
+</body>
+</html>

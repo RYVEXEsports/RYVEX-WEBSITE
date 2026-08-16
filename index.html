@@ -32,7 +32,7 @@
       <a href="#stats">Stats</a>
       <a href="#stream">Stream</a>
       <a href="#app">RYVEX App</a>
-      <a class="nav-cta" href="#join">Join RYVEX</a>
+      <a class="nav-cta" id="memberNavCta" href="#members">Member Zone</a>
     </nav>
   </header>
 
@@ -184,17 +184,31 @@
       </div>
     </section>
 
-    <section class="section" id="join">
-      <div class="join-panel panel reveal">
-        <div><div class="eyebrow">RECRUITMENT</div><h2>Ready to wear RYVEX Esports?</h2><p>Hledáme hráče, kteří chtějí komunikovat, soutěžit a růst společně s klubem. Náborový formulář připojíme zdarma.</p></div>
-        <a class="btn btn-primary" href="https://ryvex-app.pages.dev" target="_blank" rel="noopener noreferrer">Join RYVEX</a>
+    <section class="section" id="members">
+      <div class="member-gate panel reveal">
+        <div class="member-gate-copy">
+          <div class="eyebrow">RYVEX MEMBERS</div>
+          <h2>Club access.</h2>
+          <p>Registrace a přihlášení probíhá přímo na webu přes Discord. Přístup dostane pouze účet, který je aktuálním členem serveru RYVEX Esports.</p>
+          <div class="member-benefits">
+            <span>LIVE PANELS</span><span>TEAM DATA</span><span>VOTES</span><span>LINEUPS</span><span>CALENDAR</span>
+          </div>
+          <div class="auth-message" id="authMessage" hidden></div>
+        </div>
+        <div class="member-gate-card">
+          <div class="member-lock">R</div>
+          <strong id="memberGateTitle">RYVEX Member Zone</strong>
+          <p id="memberGateText">Ověříme Discord účet a členství v klubu. Bez členství se soukromá část neotevře.</p>
+          <a class="btn btn-primary" id="memberGateButton" href="/auth/login">Registrovat / Přihlásit</a>
+          <small>Žádné heslo k Discordu web neukládá.</small>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="footer-wrap">
     <div class="footer-brand"><img src="assets/ryvex-emblem.png" alt="" /><div><strong>RYVEX ESPORTS</strong><span>ONE CLUB. ONE LEGACY.</span></div></div>
-    <div class="footer-links"><a href="#team">Team</a><a href="#matches">Matches</a><a href="#app">App</a><a href="#join">Recruitment</a></div>
+    <div class="footer-links"><a href="#team">Team</a><a href="#matches">Matches</a><a href="#app">App</a><a href="#members">Members</a></div>
     <div class="copyright">© <span id="year"></span> RYVEX Esports</div>
   </footer>
   <script src="script.js"></script>

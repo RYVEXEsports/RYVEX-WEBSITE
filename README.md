@@ -1,38 +1,40 @@
-# RYVEX Esports Website 1.5 — LIVE + SECURITY
+# RYVEX Esports Website 1.6 — Member Gate
 
-Base: RYVEX-ESPORTS-WEBSITE-1.4.zip
+Tato verze navazuje na 1.5.1 a přidává bezpečnou členskou zónu přímo na web.
 
-## Hotovo
-- layout roztažený až téměř do krajů (max 1560 px)
-- PRESTIGE LEAGUE opraveno
-- náborový headline: Ready to wear RYVEX Esports?
-- RYVEX App preview předělaný do stylu skutečné aplikace
-- Open RYVEX App vede na https://ryvex-app.pages.dev
-- YouTube LIVE automaticky sleduje @AinslayCZ a přehrává stream přímo na webu
-- Discord / RYVEX Manager LIVE: roster, online stav, další event/zápas, poslední výsledky, wins a form
-- frontend nikdy nedostane RYVEX_BOT_API_KEY
-- Cloudflare Function vrací jen sanitizovaná veřejná data; hlasování, chat, owner actions a interní poll data se na web nevystavují
-- security headers: CSP, HSTS, frame protection, permissions policy, nosniff, strict referrer
-- dynamická data se zapisují do DOM přes textContent; live payload se nepouští do raw HTML
+## Co je nové
+- Join RYVEX už neodkazuje do RYVEX App.
+- Na hlavním webu je `Member Zone` s registrací/přihlášením přes Discord OAuth.
+- Přístup dostane pouze Discord účet, který je aktuálním členem serveru RYVEX Esports.
+- Po prvním úspěšném ověření se uživatel dostane na `/members.html`.
+- Session je podepsaná HMAC, uložená pouze v `HttpOnly + Secure + SameSite=Lax` cookie.
+- Soukromý endpoint `/api/member-state` bez platné session vrací 401.
+- Veřejný `/api/site-live` už neposílá kompletní seznam členů ani interní hlasování/tréninky.
+- Member Zone zobrazuje LIVE soupisku, eventy, výsledky a klubové statistiky.
+- Připravené bloky pro další moduly: Hlasování, Lineup Studio, Club Center.
 
-## Cloudflare Pages — Production variables / secrets
-V projektu WEBU (ne jen v projektu aplikace) nastav:
+## Cloudflare — stávající proměnné
+Tyto už web 1.5 používá a zůstávají beze změny:
+- `RYVEX_BOT_API_URL` — Text
+- `RYVEX_BOT_API_KEY` — Secret
+- `RYVEX_PUBLIC_VIEW_USER_ID` — Text
+- `YOUTUBE_API_KEY` — Secret
 
-- RYVEX_BOT_API_URL = veřejná HTTPS URL RYVEX Manager hostingu, bez lomítka na konci
-- RYVEX_BOT_API_KEY = stejný secret jako RYVEX_WEB_API_KEY v hostingu bota — nastav jako Secret
-- RYVEX_PUBLIC_VIEW_USER_ID = Discord ID účtu, který je v RYVEX jako Owner/Management/Player — doporučeno Owner; zůstává server-side
-- YOUTUBE_API_KEY = YouTube Data API v3 key — nastav jako Secret
+## Cloudflare — nové proměnné pro Member Zone
+Přidej do Production:
+- `DISCORD_CLIENT_ID` — Text — stejné Client ID jako používá RYVEX App
+- `DISCORD_CLIENT_SECRET` — Secret — Discord OAuth client secret
+- `RYVEX_GUILD_ID` — Text — ID Discord serveru RYVEX Esports
+- `DISCORD_REDIRECT_URI` — Text — přesně `https://ryvex-website-5a5.pages.dev/auth/callback`
+- `RYVEX_WEBSITE_SESSION_SECRET` — Secret — nový náhodný řetězec minimálně 32 znaků; nepoužívej veřejný nebo již zveřejněný secret
 
-Website Function používá RYVEX_PUBLIC_VIEW_USER_ID jen server-side pro READ-ONLY načtení stavu z existujícího /api/v1/state. Do browseru pošle pouze veřejné/sanitizované informace.
+## Discord Developer Portal
+V OAuth2 nastavení stejné Discord aplikace přidej mezi Redirects:
+`https://ryvex-website-5a5.pages.dev/auth/callback`
 
-## Deploy
-Nahraj obsah této složky jako root web projektu. Cloudflare Pages musí zachovat složku `functions/`, `_routes.json` a `_headers`.
+Pokud později web dostane vlastní doménu, přidej i její callback a změň `DISCORD_REDIRECT_URI`.
 
-Po deployi ověř:
-1. `/api/site-live` vrací `ok: true`
-2. `/api/youtube-live` vrací `ok: true` (online true/false podle streamu)
-3. Team / Matches / Stats se po načtení přepnou na LIVE data
-4. tlačítko Open RYVEX App otevírá https://ryvex-app.pages.dev
+## Důležitá bezpečnostní poznámka
+Discord OAuth se používá pouze k identifikaci uživatele a ověření členství v konkrétním RYVEX serveru. Web nikdy nevidí ani neukládá Discord heslo.
 
-## Poznámka k bezpečnosti
-Web je záměrně read-only. Nepřidává žádné veřejné endpointy pro hlasování, chat, owner management ani zápis na Discord. Interní ovládání zůstává v zabezpečené RYVEX App.
+Secrets, které byly někdy zobrazené na screenshotu nebo v otevřeném textu, doporučujeme rotovat před produkčním spuštěním Member Zone.
