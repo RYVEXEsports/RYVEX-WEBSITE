@@ -47,7 +47,7 @@ img{display:block;max-width:100%}
   backdrop-filter:blur(18px);
 }
 .brand{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-.brand img{width:48px;height:48px;object-fit:cover;border-radius:14px;border:1px solid rgba(242,200,75,.48);box-shadow:0 0 18px rgba(242,200,75,.12)}
+.brand img{width:56px;height:56px;object-fit:contain;border-radius:0;border:0;box-shadow:0 0 22px rgba(242,200,75,.12);filter:drop-shadow(0 0 12px rgba(242,200,75,.16))}
 .brand div{display:grid;line-height:1}
 .brand strong{font-size:17px;letter-spacing:.12em}
 .brand span{font-size:10px;letter-spacing:.34em;color:var(--gold);margin-top:6px}
@@ -101,33 +101,43 @@ h2{font-size:clamp(40px,4.2vw,64px)}
 .btn-primary{background:linear-gradient(180deg,#f6d45f,#e0ad1d);color:#111;box-shadow:0 0 32px rgba(242,200,75,.18)}
 .btn-ghost{background:rgba(255,255,255,.02);border:1px solid var(--line);color:#f5f5f5}
 .emblem-stage{
-  position:relative;min-height:430px;display:grid;place-items:center;overflow:visible;
+  position:relative;min-height:430px;overflow:hidden;
   border-radius:34px;isolation:isolate;
 }
-.emblem-stage::before{
-  content:"";position:absolute;inset:8% 4%;border-radius:50%;
-  background:radial-gradient(circle,rgba(242,200,75,.08) 0%,rgba(242,200,75,.025) 38%,transparent 70%);
-  filter:blur(10px);z-index:-2;
+.discord-stage{
+  background:
+    radial-gradient(circle at 72% 48%, rgba(242,200,75,.11), transparent 24%),
+    radial-gradient(circle at 84% 24%, rgba(43,61,114,.22), transparent 28%),
+    linear-gradient(140deg, rgba(9,9,12,.98) 0%, rgba(6,6,8,.96) 54%, rgba(12,20,42,.96) 100%);
+  border:1px solid rgba(242,200,75,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 28px 60px rgba(0,0,0,.42);
 }
-.emblem-glow{
-  position:absolute;width:74%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle,rgba(242,200,75,.20),rgba(242,200,75,.06) 38%,transparent 70%);
-  filter:blur(34px);z-index:-1;
+.discord-stage::before{
+  content:"";position:absolute;inset:-18% auto -18% 48%;width:52%;
+  background:radial-gradient(circle,rgba(242,200,75,.12) 0%,rgba(242,200,75,.035) 46%,transparent 72%);
+  filter:blur(16px);opacity:.95;z-index:0;
 }
-.hero-emblem{
-  width:min(520px,92%);height:auto;object-fit:contain;
-  opacity:.78;
-  filter:saturate(.96) contrast(1.08) brightness(.78) drop-shadow(0 0 20px rgba(242,200,75,.18)) drop-shadow(0 28px 55px rgba(0,0,0,.62));
-  transform:scale(1.04);
-  -webkit-mask-image:radial-gradient(ellipse at center,#000 54%,rgba(0,0,0,.92) 70%,transparent 100%);
-  mask-image:radial-gradient(ellipse at center,#000 54%,rgba(0,0,0,.92) 70%,transparent 100%);
+.discord-glow{
+  position:absolute;inset:12% 10% 10% 38%;
+  background:radial-gradient(circle at center,rgba(255,214,98,.16),rgba(255,214,98,.05) 42%,transparent 74%);
+  filter:blur(24px);z-index:0;
 }
-.emblem-vignette{
-  position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at center,transparent 45%,rgba(5,5,5,.10) 66%,rgba(5,5,5,.58) 100%);
-  border-radius:34px;
+.hero-emblem{position:absolute;height:auto;object-fit:contain;pointer-events:none}
+.hero-emblem-bg{
+  width:min(520px,96%);
+  right:0;top:50%;transform:translateY(-50%) scale(1.05);
+  opacity:.22;
+  filter:saturate(.9) brightness(.82) drop-shadow(0 0 28px rgba(242,200,75,.18));
 }
-.since{text-align:center;color:#777;font-size:10px;letter-spacing:.38em;margin-top:4px;position:relative;z-index:1}
+.discord-shade{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(90deg, rgba(8,8,8,.10) 0%, rgba(8,8,8,.02) 42%, rgba(8,8,8,.14) 100%),
+    radial-gradient(circle at 76% 50%, transparent 0%, rgba(5,5,5,.08) 58%, rgba(5,5,5,.38) 100%);
+  pointer-events:none;z-index:1;
+}
+.since{text-align:center;color:#777;font-size:10px;letter-spacing:.38em;margin-top:12px;position:relative;z-index:1}
+
 .ticker{display:flex;align-items:center;justify-content:center;gap:20px;white-space:nowrap;color:#c6c6c6;font-weight:800;letter-spacing:.15em;font-size:10px;min-height:62px;overflow-x:auto;scrollbar-width:none}
 .ticker::-webkit-scrollbar{display:none}
 .ticker span{color:var(--gold);flex:0 0 auto}
@@ -138,7 +148,7 @@ h2{font-size:clamp(40px,4.2vw,64px)}
 .match-shell{padding:26px}
 .match-card-main{display:grid;grid-template-columns:1fr .8fr 1fr;align-items:center;gap:24px;padding:10px 4px 28px}
 .team-side{display:grid;justify-items:center;gap:8px;text-align:center}
-.team-side img{width:130px;height:130px;object-fit:cover;border-radius:22px;border:1px solid rgba(242,200,75,.25)}
+.team-side img{width:130px;height:130px;object-fit:contain;border-radius:0;border:0;filter:drop-shadow(0 0 18px rgba(242,200,75,.16))}
 .team-side strong{font-size:28px;letter-spacing:.06em}.team-side span{font-size:10px;letter-spacing:.26em;color:var(--gold)}
 .match-meta{text-align:center}
 .match-meta small{font-size:10px;letter-spacing:.25em;color:var(--muted)}
@@ -192,7 +202,7 @@ linear-gradient(180deg,#0f0f0f,#090909);border:1px solid rgba(255,255,255,.05)}
 .mini-footer{margin-top:18px;color:#8b8b8b;font-size:12px;line-height:1.6}
 .join-panel{padding:34px;display:flex;align-items:center;justify-content:space-between;gap:30px}
 .footer-wrap{width:min(1280px,calc(100% - 34px));margin:0 auto 44px;padding:28px 0 18px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:26px;color:var(--muted);font-size:12px;position:relative;z-index:1}
-.footer-brand{display:flex;align-items:center;gap:12px}.footer-brand img{width:44px;height:44px;border-radius:11px}.footer-brand div{display:grid}.footer-brand strong{color:white}.footer-brand span{font-size:9px;letter-spacing:.17em;color:var(--gold);margin-top:5px}
+.footer-brand{display:flex;align-items:center;gap:12px}.footer-brand img{width:44px;height:44px;object-fit:contain;border-radius:0;filter:drop-shadow(0 0 10px rgba(242,200,75,.12))}.footer-brand div{display:grid}.footer-brand strong{color:white}.footer-brand span{font-size:9px;letter-spacing:.17em;color:var(--gold);margin-top:5px}
 .footer-links{display:flex;gap:20px}.footer-links a:hover{color:var(--gold)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}.reveal.visible{opacity:1;transform:none}
 @media (max-width:1100px){
@@ -214,7 +224,7 @@ linear-gradient(180deg,#0f0f0f,#090909);border:1px solid rgba(255,255,255,.05)}
   .topbar{padding:0 14px}.brand div{display:none}
   .panel-hero{padding:28px;min-height:auto;gap:20px}
   .emblem-stage{min-height:300px}
-  .hero-emblem{width:min(390px,96%);opacity:.72}
+  .hero-emblem-bg{width:min(420px,100%);opacity:.28;right:50%;transform:translate(50%,-50%) scale(1.02)}
   h1{font-size:clamp(46px,14vw,68px)}
   h2{font-size:clamp(38px,11vw,52px)}
   .hero p,.feature p,.app-copy p,.join-panel p{font-size:16px;line-height:1.75}
