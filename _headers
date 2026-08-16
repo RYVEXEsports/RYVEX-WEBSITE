@@ -1,0 +1,10 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self' https://ryvex-app.pages.dev; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://cdn.discordapp.com https://media.discordapp.net https://i.ytimg.com; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; upgrade-insecure-requests
+
+/assets/*
+  Cache-Control: public, max-age=3600

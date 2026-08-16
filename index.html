@@ -68,7 +68,7 @@
       <div>RYVEX ESPORTS</div><span>◆</span>
       <div>FC PRO CLUBS</div><span>◆</span>
       <div>PCG LEAGUE</div><span>◆</span>
-      <div>PRESTIGE LIGA</div><span>◆</span>
+      <div>PRESTIGE LEAGUE</div><span>◆</span>
       <div>VPG LEAGUE</div><span>◆</span>
       <div>COMPETE • EVOLVE • DOMINATE</div><span>◆</span>
       <div>ONE CLUB • ONE TEAM • ONE LEGACY</div>
@@ -80,7 +80,7 @@
           <div class="eyebrow">MATCH CENTER</div>
           <h2>Next match</h2>
         </div>
-        <span class="status-pill">SCHEDULE PENDING</span>
+        <span class="status-pill" id="matchStatus">DISCORD SYNC</span>
       </div>
 
       <div class="match-shell reveal panel">
@@ -94,27 +94,27 @@
           <div class="match-meta">
             <small>NEXT FIXTURE</small>
             <div class="vs">VS</div>
-            <p>Soupeř bude doplněn</p>
-            <div class="match-time">TBA • ONLINE</div>
+            <p id="nextOpponent">Načítám další zápas…</p>
+            <div class="match-time" id="nextMatchTime">DISCORD LIVE</div>
           </div>
 
           <div class="team-side opponent">
             <div class="opponent-mark">?</div>
-            <strong>OPPONENT</strong>
-            <span>COMING SOON</span>
+            <strong id="opponentName">OPPONENT</strong>
+            <span id="opponentCompetition">COMING SOON</span>
           </div>
         </div>
 
-        <div class="results-grid">
-          <article class="result-card">
-            <div><span class="badge">RESULT</span><span class="muted">Placeholder</span></div>
-            <strong>RYVEX <b>–</b> OPPONENT</strong>
-            <small>Výsledek doplníme z Manageru / administrace.</small>
+        <div class="results-grid" id="resultsGrid">
+          <article class="result-card result-skeleton">
+            <div><span class="badge">RESULT</span><span class="muted">DISCORD LIVE</span></div>
+            <strong>Načítám výsledky…</strong>
+            <small>Data se synchronizují z RYVEX Manageru.</small>
           </article>
-          <article class="result-card">
-            <div><span class="badge">TOURNAMENT</span><span class="muted">Upcoming</span></div>
-            <strong>COMING SOON</strong>
-            <small>Turnajový kalendář připravený pro napojení.</small>
+          <article class="result-card result-skeleton">
+            <div><span class="badge">RYVEX MANAGER</span><span class="muted">SECURE PROXY</span></div>
+            <strong>LIVE DATA</strong>
+            <small>Žádný API klíč není uložený ve frontendu.</small>
           </article>
         </div>
       </div>
@@ -126,7 +126,7 @@
           <div class="eyebrow">ROSTER</div>
           <h2>Meet the squad</h2>
         </div>
-        <p class="section-note">Karty jsou připravené pro aktuální soupisku a pozice týmu.</p>
+        <p class="section-note" id="rosterNote">Soupiska se načítá živě z Discordu přes RYVEX Manager.</p>
       </div>
       <div class="roster-grid" id="rosterGrid"></div>
     </section>
@@ -137,10 +137,10 @@
       </div>
       <div class="stats-shell panel reveal">
         <div class="stats-grid">
-          <article class="stat"><span>01</span><strong>SEASONS</strong><small>Competitive journey</small></article>
-          <article class="stat"><span>00</span><strong>WINS</strong><small>Napojíme na výsledky</small></article>
-          <article class="stat"><span>00</span><strong>GOALS</strong><small>Automatické klubové statistiky</small></article>
-          <article class="stat"><span>00</span><strong>MVP</strong><small>Player performance</small></article>
+          <article class="stat"><span id="statMembers">—</span><strong>MEMBERS</strong><small>Discord roster</small></article>
+          <article class="stat"><span id="statOnline">—</span><strong>ONLINE</strong><small>Discord / voice status</small></article>
+          <article class="stat"><span id="statWins">—</span><strong>WINS</strong><small>RYVEX Manager results</small></article>
+          <article class="stat"><span id="statForm">—</span><strong>FORM</strong><small>Recent matches</small></article>
         </div>
       </div>
     </section>
@@ -148,12 +148,12 @@
     <section class="section split-stream" id="stream">
       <div class="feature panel reveal">
         <div class="eyebrow">LIVE CENTER</div><h2>Watch RYVEX live.</h2>
-        <p>Sekce je připravená pro YouTube livestream. Po doplnění ID kanálu můžeme zobrazovat stream přímo na webu.</p>
-        <a class="btn btn-primary" href="#" aria-disabled="true">YouTube channel</a>
+        <p>Stream je napojený na YouTube @AinslayCZ stejně jako v RYVEX App. Jakmile spustíš veřejný LIVE, web ho automaticky zobrazí.</p>
+        <a class="btn btn-primary" href="https://www.youtube.com/@AinslayCZ" target="_blank" rel="noopener noreferrer">YouTube @AinslayCZ</a>
       </div>
-      <div class="stream-frame panel reveal">
-        <div class="live-dot"><span></span> OFFLINE</div>
-        <div class="stream-placeholder"><div class="play">▶</div><strong>RYVEX LIVE</strong><small>Stream se zobrazí automaticky po napojení.</small></div>
+      <div class="stream-frame panel reveal" id="streamFrame">
+        <div class="live-dot" id="liveDot"><span></span> CHECKING LIVE</div>
+        <div class="stream-placeholder" id="streamPlaceholder"><div class="play">▶</div><strong>RYVEX LIVE</strong><small>Kontroluji YouTube @AinslayCZ…</small></div>
       </div>
     </section>
 
@@ -165,16 +165,29 @@
           <div class="app-badges"><span>PWA</span><span>MOBILE</span><span>24/7</span></div>
         </div>
         <div class="app-preview">
-          <div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen"><div class="mini-badge">RYVEX APP</div><div class="mini-title">Club center</div><div class="mini-cards"><div></div><div></div><div></div></div><div class="mini-footer">chat • lineup • voice • matchday</div></div></div>
-          <a class="btn btn-primary" href="#" aria-disabled="true">Open RYVEX App</a>
+          <div class="phone-mock" aria-label="RYVEX App preview">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="mini-app-head">
+                <img src="assets/ryvex-emblem.png" alt="" />
+                <div><b>RYVEX Esports</b><small>SINCE 2026</small></div>
+                <span><i></i> LIVE</span>
+              </div>
+              <div class="mini-app-hero"><small>CLUB HUB</small><strong>ONE CLUB.<br><em>ONE SYSTEM.</em></strong><p>Discord, matchday, lineup & stream.</p></div>
+              <div class="mini-app-stats"><div><b id="miniMembers">—</b><small>MEMBERS</small></div><div><b id="miniOnline">—</b><small>ONLINE</small></div></div>
+              <div class="mini-app-cards"><div><b>Hlasování</b><span>Team vote</span></div><div><b>Sestava</b><span>Lineup studio</span></div><div><b>Stream</b><span id="miniStreamState">YouTube LIVE</span></div></div>
+              <div class="mini-app-nav"><span class="active">Home</span><span>Vote</span><span>Calendar</span><span>More</span></div>
+            </div>
+          </div>
+          <a class="btn btn-primary" href="https://ryvex-app.pages.dev" target="_blank" rel="noopener noreferrer">Open RYVEX App</a>
         </div>
       </div>
     </section>
 
     <section class="section" id="join">
       <div class="join-panel panel reveal">
-        <div><div class="eyebrow">RECRUITMENT</div><h2>Ready to wear the R?</h2><p>Hledáme hráče, kteří chtějí komunikovat, soutěžit a růst společně s klubem. Náborový formulář připojíme zdarma.</p></div>
-        <a class="btn btn-primary" href="mailto:ryvex@example.com">Join RYVEX</a>
+        <div><div class="eyebrow">RECRUITMENT</div><h2>Ready to wear RYVEX Esports?</h2><p>Hledáme hráče, kteří chtějí komunikovat, soutěžit a růst společně s klubem. Náborový formulář připojíme zdarma.</p></div>
+        <a class="btn btn-primary" href="https://ryvex-app.pages.dev" target="_blank" rel="noopener noreferrer">Join RYVEX</a>
       </div>
     </section>
   </main>
