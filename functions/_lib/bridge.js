@@ -70,6 +70,7 @@ export function sanitizePublicState(body) {
     generatedAt: full.generatedAt,
     club: full.club,
     summary: full.summary,
+    members: full.members.slice(0, 32),
     events: matchLike.slice(0, 4),
     results: full.results.slice(0, 4)
   };
