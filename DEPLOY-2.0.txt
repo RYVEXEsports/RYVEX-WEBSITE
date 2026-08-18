@@ -1,0 +1,27 @@
+RYVEX WEBSITE 2.0 CLUB OS — DEPLOY
+=================================
+
+BALÍK JE FULL WEBSITE / FULL GIT.
+
+GITHUB:
+1) Rozbal ZIP.
+2) Nahraj VŠECHNY soubory a složky z kořene balíku do kořene repa RYVEX-WEBSITE.
+3) Potvrď Replace/Overwrite existujících souborů.
+4) Commit změny.
+5) Cloudflare Pages provede nový deploy automaticky.
+
+NEMAŽ / NEMĚŇ CLOUDFLARE SECRETS.
+Stávající env zůstávají stejné.
+
+PO DEPLOYI OVĚŘ:
+- public web otevře homepage
+- Team se načte LIVE
+- Club OS -> Discord login
+- /members.html po loginu ukáže DISCORD LIVE
+- Hlasování lze otevřít a hlas uložit
+- Chat ukáže dostupné Discord kanály
+- Voice ukáže dostupné místnosti
+
+PLNÝ CLUB OS REŽIM:
+RYVEX Manager 5.0.3 Club OS LIVE Sync nebo novější.
+Na LIVE 5.0.2 rollbacku web automaticky použije compatibility režim.

@@ -206,7 +206,7 @@ async function pullSiteLive() {
     if (!response.ok || !state?.ok) throw new Error(state?.error || `HTTP ${response.status}`);
     renderRoster(Array.isArray(state.members) && state.members.length ? state.members : FALLBACK_PLAYERS, Array.isArray(state.members) && state.members.length > 0);
     if (!Array.isArray(state.members) || !state.members.length) {
-      if (els.rosterNote) els.rosterNote.textContent = "Vybraní členové klubu • kompletní LIVE soupiska je dostupná pouze v Member Zone.";
+      if (els.rosterNote) els.rosterNote.textContent = "Aktivní klubová soupiska • LIVE synchronizace z RYVEX Manageru.";
     }
     renderStats(state);
     renderMatch(state);
@@ -307,7 +307,7 @@ async function checkMemberAccess() {
     const messages = {
       not_member: "Tento Discord účet není členem RYVEX Esports. Soukromá část zůstává uzamčená.",
       invalid_state: "Přihlášení vypršelo nebo bylo přerušeno. Zkus ověření znovu.",
-      not_configured: "Member Zone ještě není kompletně nastavená v Cloudflare.",
+      not_configured: "RYVEX Club OS ještě není kompletně nastavený v Cloudflare.",
       discord_error: "Discord ověření se nepodařilo dokončit. Zkus to znovu."
     };
     message.textContent = messages[authError] || "Přihlášení se nepodařilo dokončit.";
@@ -321,8 +321,8 @@ async function checkMemberAccess() {
     if (!data?.authenticated) return;
     if (title) title.textContent = `Vítej, ${data.user?.name || "RYVEX member"}`;
     if (text) text.textContent = "Členství je ověřené. Můžeš vstoupit do soukromé klubové zóny.";
-    if (button) { button.textContent = "Otevřít Member Zone"; button.href = "/members.html"; }
-    if (navCta) { navCta.textContent = "Member Zone ✓"; navCta.href = "/members.html"; }
+    if (button) { button.textContent = "Otevřít Club OS"; button.href = "/members.html"; }
+    if (navCta) { navCta.textContent = "Club OS ✓"; navCta.href = "/members.html"; }
   } catch {}
 }
 

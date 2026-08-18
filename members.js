@@ -1,76 +1,137 @@
 const $ = id => document.getElementById(id);
+const state = { live: null, page: 'overview', chatChannelId: null, supportType: 'help', chatLoaded: false, voiceLoaded: false };
+const POSITION_OPTIONS = ['GK','SO','LO','PO','SOZ','SZ','LSZ','PSZ','OFZ','LZ','PZ','LK','PK','HU'];
 
+function node(tag, cls = '', text = '') {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined && text !== null) n.textContent = String(text);
+  return n;
+}
+function clear(el) { if (el) el.replaceChildren(); return el; }
+function text(v, fallback = '—') { const s = String(v ?? '').trim(); return s || fallback; }
+function num(v, fallback = 0) { const n = Number(v); return Number.isFinite(n) ? n : fallback; }
+function pct(v) { return Math.max(0, Math.min(100, num(v))); }
 function fmt(ts) {
-  const n = Number(ts || 0);
-  if (!n) return "TBA";
-  return new Intl.DateTimeFormat("cs-CZ", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(n));
+  const n = num(ts, 0); if (!n) return { date:'TBA', time:'—', full:'TBA' };
+  const d = new Date(n);
+  return {
+    date: new Intl.DateTimeFormat('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d),
+    time: new Intl.DateTimeFormat('cs-CZ',{hour:'2-digit',minute:'2-digit'}).format(d),
+    full: new Intl.DateTimeFormat('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)
+  };
+}
+function safeHttpUrl(value) { try { const u = new URL(String(value || '')); return u.protocol === 'https:' ? u.href : ''; } catch { return ''; } }
+function avatar(src, name, cls='mini-avatar') {
+  const url = safeHttpUrl(src);
+  if (url) { const img=node('img',cls); img.src=url; img.alt=''; img.loading='lazy'; img.referrerPolicy='no-referrer'; return img; }
+  const d=node('div',cls,text(name,'R').charAt(0).toUpperCase()); return d;
+}
+function outcomeLabel(v){ return v==='W'?'WIN':v==='L'?'LOSS':v==='D'?'DRAW':text(v,'MATCH'); }
+function requestError(data, status) { return data?.error ? `${data.error}${status ? ` (${status})` : ''}` : `HTTP ${status || 500}`; }
+async function get(url) {
+  const r=await fetch(url,{cache:'no-store',credentials:'same-origin'}); const data=await r.json().catch(()=>({}));
+  if(!r.ok || data?.ok===false) throw new Error(requestError(data,r.status)); return data;
+}
+async function post(url, body) {
+  const r=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await r.json().catch(()=>({}));
+  if(!r.ok || data?.ok===false) throw new Error(requestError(data,r.status)); return data;
 }
 
-function item(title, meta, badge = "") {
-  const row = document.createElement("article");
-  row.className = "member-list-item";
-  const left = document.createElement("div");
-  const strong = document.createElement("strong"); strong.textContent = title || "RYVEX";
-  const small = document.createElement("small"); small.textContent = meta || "";
-  left.append(strong, small);
-  const span = document.createElement("span"); span.textContent = badge || "LIVE";
-  row.append(left, span);
-  return row;
+function showPage(page) {
+  const owner = !!state.live?.permissions?.isOwner;
+  if (page === 'management' && !owner) page = 'overview';
+  state.page = page;
+  document.querySelectorAll('.os-page').forEach(p=>p.classList.toggle('active',p.dataset.pagePanel===page));
+  document.querySelectorAll('.os-nav').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  if ($('mobilePageSelect')) $('mobilePageSelect').value=page;
+  const u=new URL(location.href); if(page==='overview')u.searchParams.delete('page');else u.searchParams.set('page',page); history.replaceState({},'',u);
+  if(page==='chat') loadChatChannels().catch(renderChatError);
+  if(page==='voice') loadVoice().catch(renderVoiceError);
+  if(page==='media') loadYoutube().catch(()=>{});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function rosterCard(member) {
-  const card = document.createElement("article"); card.className = "member-roster-card";
-  const avatar = document.createElement("div"); avatar.className = "member-roster-avatar";
-  if (member.avatar) { const img = document.createElement("img"); img.src = member.avatar; img.alt = ""; img.referrerPolicy = "no-referrer"; avatar.append(img); }
-  else avatar.textContent = String(member.name || "R").charAt(0).toUpperCase();
-  const copy = document.createElement("div");
-  const strong = document.createElement("strong"); strong.textContent = member.name || "RYVEX member";
-  const small = document.createElement("small"); small.textContent = `${member.role || "PLAYER"} • ${member.position || "—"}`;
-  copy.append(strong, small);
-  const dot = document.createElement("i"); dot.className = member.online ? "online" : ""; dot.title = member.online ? "Online" : "Offline";
-  card.append(avatar, copy, dot);
-  return card;
+document.querySelectorAll('.os-nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.goto)));
+$('mobilePageSelect')?.addEventListener('change',e=>showPage(e.target.value));
+
+function renderIdentity(live) {
+  const viewer=live.viewer||{}; const current=live.currentUser||{}; const box=$('memberIdentity'); clear(box);
+  box.append(avatar(viewer.avatar,viewer.name,'member-avatar'));
+  const copy=node('div'); copy.append(node('small','',`${text(current.role,'MEMBER')} • ${text(live.access?.level,'MEMBER').toUpperCase()}`),node('strong','',text(viewer.name,'RYVEX member')),node('span','',`${text(current.position,'—')} • Discord verified`)); box.append(copy);
+  $('accessLevel').textContent=text(live.access?.level || current.access,'member').toUpperCase();
 }
 
-async function load() {
-  try {
-    const r = await fetch("/api/member-state", { cache: "no-store", credentials: "same-origin" });
-    const data = await r.json();
-    if (r.status === 401) { location.replace("/#members"); return; }
-    if (!r.ok || !data?.ok) throw new Error(data?.error || `HTTP ${r.status}`);
-
-    const viewer = data.viewer || {};
-    const identity = $("memberIdentity");
-    identity.replaceChildren();
-    const av = document.createElement("div"); av.className = "member-avatar";
-    if (viewer.avatar) { const img = document.createElement("img"); img.src = viewer.avatar; img.alt = ""; av.append(img); } else av.textContent = String(viewer.name || "R").charAt(0).toUpperCase();
-    const copy = document.createElement("div");
-    const sm = document.createElement("small"); sm.textContent = "VERIFIED RYVEX MEMBER";
-    const st = document.createElement("strong"); st.textContent = viewer.name || "RYVEX member";
-    const sp = document.createElement("span"); sp.textContent = "Discord membership verified";
-    copy.append(sm, st, sp); identity.append(av, copy);
-
-    $("mMembers").textContent = String(data.summary?.members ?? "—").padStart(2, "0");
-    $("mOnline").textContent = String(data.summary?.online ?? "—").padStart(2, "0");
-    $("mWins").textContent = String(data.summary?.wins ?? "—").padStart(2, "0");
-    $("mForm").textContent = String(data.summary?.form || "—");
-
-    const ev = $("memberEvents"); ev.replaceChildren();
-    (data.events || []).slice(0, 6).forEach(e => ev.append(item(e.title || "RYVEX event", `${fmt(e.startsAt)} • ${e.competition || e.kind || "Club event"}`, e.kind || "EVENT")));
-    if (!ev.children.length) ev.append(item("Žádná naplánovaná akce", "RYVEX Manager zatím nevrátil další událost.", "WAITING"));
-
-    const rs = $("memberResults"); rs.replaceChildren();
-    (data.results || []).slice(0, 6).forEach(x => rs.append(item(`RYVEX ${x.score || "–"} ${x.opponent || "OPPONENT"}`, `${fmt(x.startsAt)} • ${x.competition || "MATCH"}`, x.outcome || "RESULT")));
-    if (!rs.children.length) rs.append(item("Zatím bez výsledků", "Výsledky se synchronizují z RYVEX Manageru.", "LIVE"));
-
-    const roster = $("memberRoster"); roster.replaceChildren();
-    (data.members || []).forEach(m => roster.append(rosterCard(m)));
-    $("memberRosterCount").textContent = `${(data.members || []).length} MEMBERS`;
-    $("memberDashboard").hidden = false;
-  } catch (err) {
-    $("memberErrorText").textContent = `Member Zone se nepodařilo načíst: ${err.message}`;
-    $("memberError").hidden = false;
-  }
+function makeListItem(title, meta, badge='LIVE') {
+  const row=node('article','member-list-item'), left=node('div'); left.append(node('strong','',title),node('small','',meta)); row.append(left,node('span','',badge)); return row;
 }
 
-load();
+function renderOverview(live) {
+  const s=live.summary||{}; $('mMembers').textContent=String(s.members??'—').padStart(2,'0'); $('mOnline').textContent=String(s.online??'—').padStart(2,'0'); $('mWins').textContent=String(s.wins??'—').padStart(2,'0'); $('mForm').textContent=text(s.form); $('mVote').textContent=text(s.voteProgress); $('mScore').textContent=s.focusCount??'—';
+  const club=live.club||{}; if(safeHttpUrl(club.logo))$('clubLogo').src=club.logo; $('clubSince').textContent=`SINCE ${text(club.since,'2026')}`;
+  const ev=clear($('overviewEvents')); (live.events||[]).filter(x=>num(x.startsAt)>=Date.now()-86400000).slice(0,5).forEach(e=>ev.append(makeListItem(text(e.title,'Klubová akce'),`${fmt(e.startsAt).full} • ${text(e.competition||e.kindLabel||e.kind,'RYVEX')}`,text(e.kindLabel||e.kind,'EVENT').toUpperCase()))); if(!ev.children.length)ev.append(makeListItem('Žádná další akce','Kalendář zatím neobsahuje budoucí událost.','WAITING'));
+  const rs=clear($('overviewResults')); (live.results||[]).slice(0,5).forEach(r=>rs.append(makeListItem(`RYVEX ${text(r.score,'–')} ${text(r.opponent,'Soupeř')}`,`${fmt(r.startsAt).date} • ${text(r.competition,'MATCH')}`,outcomeLabel(r.outcome)))); if(!rs.children.length)rs.append(makeListItem('Zatím bez výsledků','Po uložení výsledku v Manageru se objeví automaticky.','LIVE'));
+  renderOverviewPoll(live.poll);
+  $('systemVersion').textContent=text(live.system?.version,'RYVEX Manager'); $('systemSource').textContent=text(live.system?.source,'Discord + RYVEX Manager'); $('lastSync').textContent=fmt(live.generatedAt).full;
+}
+
+function renderOverviewPoll(poll){const box=clear($('overviewPoll')); $('overviewPollTitle').textContent=text(poll?.title,'Hlasování'); if(!poll){box.append(node('div','empty-inline','Aktuálně není otevřené hlasování.'));return;} const c=poll.counts||{}; const p=c.total?Math.round(num(c.voted)/num(c.total)*100):0; box.append(node('div','vote-time',fmt(poll.startsAt).full)); const track=node('div','progress-track'),bar=node('i');bar.style.width=`${p}%`;track.append(bar);box.append(track);const counts=node('div','vote-counts');counts.append(node('span','',`✅ ANO ${num(c.yes)}`),node('span','',`❔ MOŽNÁ ${num(c.maybe)}`),node('span','',`❌ NE ${num(c.no)}`),node('span','',`${num(c.voted)}/${num(c.total)} hlasovalo`));box.append(counts)}
+
+function renderVote(live){const box=clear($('votePanel')),poll=live.poll;if(!poll){box.append(node('div','empty-inline','Aktuálně není otevřené hlasování. Jakmile vedení vytvoří nové, objeví se zde automaticky.'));}else{const wrap=node('div','vote-live'),head=node('div','vote-headline'),copy=node('div');copy.append(node('div','vote-time',fmt(poll.startsAt).full),node('h2','',text(poll.title,'Týmové hlasování')),node('p','',text(poll.description,'')));head.append(copy,node('span','status-pill live-ok','LIVE'));wrap.append(head);const c=poll.counts||{},p=c.total?Math.round(num(c.voted)/num(c.total)*100):0,track=node('div','progress-track'),bar=node('i');bar.style.width=`${p}%`;track.append(bar);wrap.append(track);const actions=node('div','vote-actions');[['yes','✅','ANO'],['maybe','❔','MOŽNÁ'],['no','❌','NE']].forEach(([choice,emoji,label])=>{const b=node('button',`vote-choice ${poll.myVote===choice?'active':''}`);b.type='button';b.append(node('b','',`${emoji} ${label}`),node('small','',poll.myVote===choice?'TVŮJ HLAS':'HLASOVAT'));b.addEventListener('click',()=>saveVote(poll.id,choice,b));actions.append(b)});wrap.append(actions);const counts=node('div','vote-counts');counts.append(node('span','',`ANO ${num(c.yes)}`),node('span','',`MOŽNÁ ${num(c.maybe)}`),node('span','',`NE ${num(c.no)}`),node('span','',`${num(c.voted)}/${num(c.total)} celkem`));wrap.append(counts);box.append(wrap)}
+  const tbody=clear($('pollHistory'));(live.pollStats||[]).slice(0,30).forEach(p=>{const tr=node('tr'),c=p.counts||{};[text(p.title,'Hlasování'),fmt(p.startsAt).date,num(c.yes),num(c.maybe),num(c.no),`${num(c.voted)}/${num(c.total)}`].forEach(v=>tr.append(node('td','',v)));tbody.append(tr)});if(!tbody.children.length){const tr=node('tr'),td=node('td','', 'Historie zatím není dostupná.');td.colSpan=6;tr.append(td);tbody.append(tr)}}
+async function saveVote(pollId,choice){try{await post('/api/vote',{pollId,choice});await loadState(true)}catch(e){alert(`Hlas se nepodařilo uložit: ${e.message}`)}}
+
+function renderCalendar(live){const grid=clear($('calendarGrid'));(live.events||[]).slice(0,30).forEach(e=>{const card=node('article','panel calendar-card');card.append(node('div','event-date',fmt(e.startsAt).full),node('h3','',text(e.title,'Klubová akce')));if(e.description)card.append(node('p','',e.description));const meta=node('div','calendar-meta');meta.append(node('span','',text(e.kindLabel||e.kind,'EVENT').toUpperCase()));if(e.competition)meta.append(node('span','',e.competition));if(e.poll?.counts)meta.append(node('span','',`HLAS ${num(e.poll.counts.voted)}/${num(e.poll.counts.total)}`));if(e.result)meta.append(node('span','',`RESULT ${e.result}`));card.append(meta);if(e.discordUrl){const a=node('a','discord-link','Otevřít na Discordu');a.href=safeHttpUrl(e.discordUrl);a.target='_blank';a.rel='noopener noreferrer';card.append(a)}grid.append(card)});if(!grid.children.length)grid.append(node('div','panel empty-inline','Kalendář je zatím prázdný.'))}
+
+function renderLineup(live){const box=clear($('lineupPanel')),l=live.lineup;if(!l){box.append(node('div','empty-inline','Aktuálně není uložená sestava.'));return;}const head=node('div','lineup-head'),copy=node('div');copy.append(node('div','eyebrow','CURRENT LINEUP'),node('h2','',text(l.formation,'FORMATION')),node('div','lineup-meta',`${text(l.status,'draft').toUpperCase()} • ${fmt(l.updatedAt).full}`));head.append(copy,node('span','status-pill',l.generated?'AUTO GENERATED':'LIVE'));box.append(head);const grid=node('div','lineup-grid');(l.assignments||[]).forEach(a=>{const s=node('div','lineup-slot');s.append(node('small','',text(a.slot,'POZICE')),node('b','',text(a.name,'VOLNÉ')),node('span','',text(a.position,'')));grid.append(s)});box.append(grid);if((l.substitutes||[]).length){box.append(node('div','eyebrow','SUBSTITUTES'));const subs=node('div','sub-list');l.substitutes.forEach(x=>subs.append(node('span','',`${text(x.name,'Hráč')} • ${(x.positions||[]).join('/')||'—'}`)));box.append(subs)}}
+
+function performanceRows(live){
+  if(Array.isArray(live.statistics)&&live.statistics.length)return live.statistics;
+  const members=new Map((live.members||[]).map(m=>[String(m.id),m]));
+  return (live.ea?.leaderboard||[]).map(r=>{const m=members.get(String(r.discordUserId||''))||{};return {userId:r.discordUserId||r.eaName,name:m.name||r.eaName||'EA Player',avatar:m.avatar||null,position:m.position||'—',appearances:num(r.appearances??r.matches??r.games),goals:num(r.goals),assists:num(r.assists),mvps:num(r.mvps??r.ryvexMvp),rating:r.rating??r.averageRating??null,ryvexScore:r.ryvexScore??r.averageRyvexScore??null,passRate:null,tackleRate:null,points:num(r.points)}});
+}
+function derivedRankings(rows){const top=(key)=>[...rows].filter(r=>num(r[key])>0).sort((a,b)=>num(b[key])-num(a[key])).slice(0,10);return {scorers:top('goals'),assists:top('assists'),mvps:top('mvps'),rating:[...rows].filter(r=>r.rating!=null).sort((a,b)=>num(b.rating)-num(a.rating)).slice(0,10)}}
+function renderStatistics(live){const rows=performanceRows(live),tbody=clear($('statisticsTable'));rows.forEach(r=>{const tr=node('tr'),pc=node('td','player-cell');pc.append(avatar(r.avatar,r.name),node('b','',text(r.name,'Hráč')));tr.append(pc);[r.position,r.appearances,r.goals,r.assists,r.mvps,r.rating??'—',r.ryvexScore??'—',r.passRate==null?'—':`${r.passRate}%`,r.tackleRate==null?'—':`${r.tackleRate}%`].forEach(v=>tr.append(node('td','',v)));tbody.append(tr)});if(!tbody.children.length){const tr=node('tr'),td=node('td','','Statistiky se zatím synchronizují z EA / Manageru.');td.colSpan=10;tr.append(td);tbody.append(tr)}
+  const grid=clear($('rankingGrid')),ranking=(live.rankings&&Object.keys(live.rankings).length)?live.rankings:derivedRankings(rows);[['TOP SCORER',ranking.scorers?.[0],'goals','gólů'],['TOP ASSIST',ranking.assists?.[0],'assists','asistencí'],['TOP MVP',ranking.mvps?.[0],'mvps','MVP'],['TOP RATING',ranking.rating?.[0],'rating','rating']].forEach(([label,r,key,suffix])=>{const c=node('article','panel ranking-card');c.append(node('small','',label),node('b','',text(r?.name,'—')),node('span','',r?`${r[key]??'—'} ${suffix}`:'Bez dat'));grid.append(c)})}
+
+function renderActivity(live){const list=clear($('activityList'));(live.activity||[]).forEach(r=>{const c=node('article',`panel activity-card ${r.status||''}`),top=node('div','activity-top');top.append(avatar(r.avatar,r.name));const copy=node('div');copy.append(node('strong','',text(r.name,'Hráč')),node('small','',`${num(r.voted)}/${num(r.total)} hlasování • ANO ${num(r.yes)} • MOŽNÁ ${num(r.maybe)} • NE ${num(r.no)} • missed ${num(r.missed)}`));top.append(copy,node('div','activity-percent',`${pct(r.percent)}%`));c.append(top);const t=node('div','progress-track'),i=node('i');i.style.width=`${pct(r.percent)}%`;t.append(i);c.append(t);list.append(c)});if(!list.children.length)list.append(node('div','panel empty-inline','Aktivita zatím nemá historii.'))}
+
+function renderAttendance(live){const tbody=clear($('attendanceTable'));(live.attendance||[]).forEach(r=>{const tr=node('tr'),pc=node('td','player-cell');pc.append(avatar(r.avatar,r.name),node('b','',text(r.name,'Hráč')));tr.append(pc);[r.points,r.arrived,r.late,r.excused,r.noShow,r.records].forEach(v=>tr.append(node('td','',num(v))));tbody.append(tr)});if(!tbody.children.length){const tr=node('tr'),td=node('td','','Docházka zatím nemá záznamy.');td.colSpan=7;tr.append(td);tbody.append(tr)}}
+
+function renderMatches(live){const list=clear($('matchdayList'));const matchRows=(live.matches&&live.matches.length)?live.matches:(live.results||[]).map(r=>({...r,status:'final',players:[]}));matchRows.forEach(m=>{const c=node('article','panel match-card-os'),top=node('div','match-top');top.append(node('span','',`${outcomeLabel(m.outcome)} • ${fmt(m.startsAt).full}`),node('span','',text(m.competition,'MATCH')));c.append(top,node('h3','',`RYVEX vs ${text(m.opponent,'Soupeř')}`));if(m.score)c.append(node('div','match-score',m.score));const meta=node('div','match-details');if(m.formation)meta.append(node('span','',`FORMATION ${m.formation}`));if(m.location)meta.append(node('span','',String(m.location).toUpperCase()));if(m.mvpName)meta.append(node('span','',`MVP ${m.mvpName}`));c.append(meta);if((m.players||[]).length){const players=node('div','match-players');m.players.slice(0,14).forEach(p=>{const row=node('div','match-player');row.append(node('span','',p.name),node('span','',`⚽ ${num(p.goals)} • 🎯 ${num(p.assists)} • ⭐ ${num(p.mvp)} • ${p.rating??'—'}`));players.append(row)});c.append(players)}list.append(c)});if(!list.children.length)list.append(node('div','panel empty-inline','Matchday historie zatím není dostupná.'))}
+
+function initPositionSelects(){[$('positionPrimary'),$('positionSecondary')].forEach(sel=>{clear(sel);sel.append(node('option','','Vyber pozici'));sel.firstChild.value='';POSITION_OPTIONS.forEach(p=>{const o=node('option','',p);o.value=p;sel.append(o)})})}
+function renderPositions(live){const me=live.currentUser?.profile||{};const positionRows=(live.positions&&live.positions.length)?live.positions:(live.members||[]).map(m=>{const parts=String(m.position||'').split('/').map(x=>x.trim()).filter(Boolean);return {userId:m.id,name:m.name,avatar:m.avatar,primary:parts[0]||null,secondary:parts[1]||null}});$('positionPrimary').value=me.primary||'';$('positionSecondary').value=me.secondary||'';const canEdit=!!live.currentUser?.profile;$('savePosition').disabled=!canEdit;$('positionMessage').textContent=canEdit?'':'Zobrazení je LIVE; úprava pozic vyžaduje Manager Club OS API 5.0.3+';const roster=clear($('positionRoster'));positionRows.forEach(p=>{const c=node('article','panel position-card');c.append(avatar(p.avatar,p.name));const cp=node('div');cp.append(node('b','',text(p.name,'Hráč')),node('small','',`${text(p.primary,'—')} / ${text(p.secondary,'—')}`));c.append(cp);roster.append(c)});if(!roster.children.length)roster.append(node('div','panel empty-inline','Pozice se zatím nenačetly.'))}
+$('savePosition')?.addEventListener('click',async()=>{const p=$('positionPrimary').value,s=$('positionSecondary').value,msg=$('positionMessage');if(!p||!s||p===s){msg.textContent='Vyber dvě různé pozice.';return}msg.textContent='Ukládám…';try{await post('/api/position',{primary:p,secondary:s});msg.textContent='Pozice uloženy a synchronizovány.';await loadState(true)}catch(e){msg.textContent=`Chyba: ${e.message}`}});
+
+function renderMembers(live){const roster=clear($('memberRoster'));(live.members||[]).forEach(m=>{const card=node('article','member-roster-card'),av=node('div','member-roster-avatar');const a=avatar(m.avatar,m.name,'member-roster-avatar');if(a.tagName==='IMG')av.replaceWith(a);else av.textContent=text(m.name,'R')[0].toUpperCase();const copy=node('div');copy.append(node('strong','',text(m.name,'RYVEX member')),node('small','',`${text(m.role,'PLAYER')} • ${text(m.position,'—')}`));const dot=node('i',m.online?'online':'');if(a.tagName==='IMG')card.append(a,copy,dot);else card.append(av,copy,dot);roster.append(card)});$('memberRosterCount').textContent=`${(live.members||[]).length} MEMBERS`}
+
+function renderSupport(live){const box=clear($('supportPanel')),support=live.support||{};if(!Array.isArray(support.types)){const wrap=node('div','open-ticket');wrap.append(node('div','eyebrow','COMPATIBILITY MODE'),node('h2','','Podpora přes Discord'),node('p','','Aktuální Manager API neposílá webový Support Center. Ostatní Club OS data se dál synchronizují automaticky.'));const guildId=String(live.club?.guildId||'');if(/^\d{15,25}$/.test(guildId)){const a=node('a','btn btn-primary','Otevřít RYVEX Discord');a.href=`https://discord.com/channels/${guildId}`;a.target='_blank';a.rel='noopener noreferrer';wrap.append(a)}box.append(wrap);return}if(support.openTicket){const open=node('div','open-ticket');open.append(node('div','eyebrow','OPEN TICKET'),node('h2','',text(support.openTicket.id,'Ticket')),node('p','',`Soukromý ticket je aktivní od ${fmt(support.openTicket.createdAt).full}.`));if(safeHttpUrl(support.openTicket.discordUrl)){const a=node('a','btn btn-primary','Otevřít ticket na Discordu');a.href=support.openTicket.discordUrl;a.target='_blank';a.rel='noopener noreferrer';open.append(a)}box.append(open);return}box.append(node('div','member-block-head'));const types=node('div','support-types');(support.types||[]).forEach(t=>{const b=node('button',`support-type ${state.supportType===t.id?'active':''}`);b.type='button';b.append(node('span','',t.emoji||'🛟'),node('b','',text(t.label,t.id)),node('small','',text(t.title,'')));b.addEventListener('click',()=>{state.supportType=t.id;renderSupport(state.live)});types.append(b)});box.append(types);const ta=node('textarea','support-note');ta.id='supportNote';ta.placeholder='Volitelně napiš krátce, co potřebuješ řešit…';box.append(ta);const action=node('button','btn btn-primary','Vytvořit soukromý ticket');action.type='button';action.addEventListener('click',async()=>{action.disabled=true;action.textContent='Vytvářím…';try{const r=await post('/api/support',{type:state.supportType,note:ta.value});if(r.ticket?.discordUrl)window.open(r.ticket.discordUrl,'_blank','noopener');await loadState(true)}catch(e){alert(`Ticket se nepodařilo vytvořit: ${e.message}`)}finally{action.disabled=false;action.textContent='Vytvořit soukromý ticket'}});box.append(action)}
+
+async function loadChatChannels(force=false){if(state.chatLoaded&&!force)return;const box=clear($('chatChannels'));box.append(node('div','empty-inline','Načítám…'));const data=await get('/api/chat-channels');state.chatLoaded=true;clear(box);(data.channels||[]).forEach(ch=>{const b=node('button',`chat-channel ${state.chatChannelId===ch.id?'active':''}`);b.type='button';b.dataset.channelId=ch.id;b.append(node('b','',`# ${ch.name}`),node('small','',text(ch.category,'Discord')));b.addEventListener('click',()=>selectChatChannel(ch.id));box.append(b)});if(!box.children.length)box.append(node('div','empty-inline','Žádné dostupné textové kanály.'));if(!state.chatChannelId&&data.channels?.[0])selectChatChannel(data.channels[0].id)}
+async function selectChatChannel(id){state.chatChannelId=String(id);document.querySelectorAll('.chat-channel').forEach(b=>b.classList.toggle('active',b.dataset.channelId===state.chatChannelId));await loadChatMessages()}
+async function loadChatMessages(){if(!state.chatChannelId)return;const box=clear($('chatMessages'));box.append(node('div','empty-inline','Načítám historii…'));const data=await get(`/api/chat-messages?channelId=${encodeURIComponent(state.chatChannelId)}&limit=60`);$('chatHead').textContent=`# ${text(data.channel?.name,'Discord')}`;clear(box);(data.messages||[]).forEach(m=>{const row=node('article',`chat-message ${m.mine?'me':''}`);row.append(avatar(m.author?.avatar,m.author?.name));const body=node('div'),head=node('div');head.append(node('b','',text(m.author?.name,'Discord')),node('small','',fmt(m.createdAt).full));body.append(head);if(m.content)body.append(node('p','',m.content));(m.attachments||[]).forEach(a=>{const url=safeHttpUrl(a.url);if(url){const link=node('a','discord-link',`Příloha: ${text(a.name,'soubor')}`);link.href=url;link.target='_blank';link.rel='noopener noreferrer';body.append(link)}});row.append(body);box.append(row)});if(!box.children.length)box.append(node('div','empty-inline','V kanálu zatím není dostupná historie.'));box.scrollTop=box.scrollHeight}
+function renderChatError(e){clear($('chatMessages')).append(node('div','empty-inline',`Chat není dostupný: ${e.message}`))}
+$('chatForm')?.addEventListener('submit',async e=>{e.preventDefault();const input=$('chatInput'),content=input.value.trim();if(!content||!state.chatChannelId)return;input.disabled=true;try{await post('/api/chat-send',{channelId:state.chatChannelId,content});input.value='';await loadChatMessages()}catch(err){alert(`Zprávu se nepodařilo odeslat: ${err.message}`)}finally{input.disabled=false;input.focus()}});
+
+async function loadVoice(){const data=await get('/api/voice'),grid=clear($('voiceGrid'));(data.channels||[]).forEach(ch=>{const c=node('article','panel voice-card');c.append(node('div','eyebrow',text(ch.category,'VOICE')),node('h3','',text(ch.name,'Voice')),node('small','',`${(ch.members||[]).length}${ch.userLimit?`/${ch.userLimit}`:''} členů`));const members=node('div','voice-members');(ch.members||[]).forEach(m=>{const row=node('div','voice-member');row.append(avatar(m.avatar,m.name),node('span','',`${text(m.name,'Hráč')}${m.muted?' • muted':''}`));members.append(row)});if(!members.children.length)members.append(node('div','empty-inline','Místnost je prázdná.'));c.append(members);if(ch.canConnect&&safeHttpUrl(ch.discordUrl)){const a=node('a','discord-link','Připojit přes Discord');a.href=ch.discordUrl;a.target='_blank';a.rel='noopener noreferrer';c.append(a)}grid.append(c)});if(!grid.children.length)grid.append(node('div','panel empty-inline','Žádné dostupné voice místnosti.'))}
+function renderVoiceError(e){clear($('voiceGrid')).append(node('div','panel empty-inline',`Voice není dostupný: ${e.message}`))}
+
+function renderMedia(live){const r=live.radio||{};$('radioName').textContent=text(r.name,'RYVEX Radio');$('radioSubtitle').textContent=text(r.subtitle,'24/7 club stream');const audio=$('radioPlayer'),stream=safeHttpUrl(r.streamUrl);if(stream&&audio.src!==stream)audio.src=stream;$('radioMeta').textContent=r.online?`ONLINE • ${text(r.codec,'stream')}${r.bitrate?` • ${r.bitrate} kbps`:''}`:'Manager stream připraven';}
+async function loadYoutube(){const frame=$('memberStream');const old=frame.querySelector('iframe');if(old)old.remove();const data=await get('/api/youtube-live').catch(()=>({online:false}));const placeholder=frame.querySelector('.stream-placeholder');if(data.online&&/^[A-Za-z0-9_-]{6,20}$/.test(data.videoId||'')){if(placeholder)placeholder.hidden=true;const iframe=node('iframe');iframe.src=`https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0`;iframe.title=text(data.title,'RYVEX LIVE');iframe.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';iframe.allowFullscreen=true;frame.append(iframe)}else if(placeholder){placeholder.hidden=false;placeholder.querySelector('strong').textContent='OFFLINE';placeholder.querySelector('small').textContent='Stream se zobrazí automaticky po spuštění YouTube LIVE.'}}
+
+function renderManagement(live){const owner=!!live.permissions?.isOwner;document.querySelectorAll('.owner-only').forEach(x=>x.hidden=!owner);if($('mobileManagement'))$('mobileManagement').hidden=!owner;if(!owner&&state.page==='management')showPage('overview')}
+$('pollCreateForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);const startsAt=new Date(fd.get('startsAt')).getTime();msg.textContent='Vytvářím…';try{await post('/api/manage',{action:'create_poll',title:fd.get('title'),description:fd.get('description'),startsAt});msg.textContent='Hlasování vytvořeno a synchronizováno do Discordu.';f.reset();await loadState(true)}catch(err){msg.textContent=`Chyba: ${err.message}`}});
+$('announcementForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);msg.textContent='Publikuji…';try{await post('/api/manage',{action:'announcement',title:fd.get('title'),text:fd.get('description')});msg.textContent='Oznámení publikováno na Discord a push.';f.reset()}catch(err){msg.textContent=`Chyba: ${err.message}`}});
+
+function renderAll(live){state.live=live;renderIdentity(live);renderOverview(live);renderVote(live);renderCalendar(live);renderLineup(live);renderStatistics(live);renderActivity(live);renderAttendance(live);renderMatches(live);renderPositions(live);renderMembers(live);renderSupport(live);renderMedia(live);renderManagement(live);$('syncState').textContent='DISCORD LIVE';document.documentElement.dataset.clubOsLive='true'}
+
+let loading=false;
+async function loadState(silent=false){if(loading)return;loading=true;try{const live=await get('/api/member-state');renderAll(live);$('memberError').hidden=true;if(!silent){const requested=new URL(location.href).searchParams.get('page')||'overview';showPage(requested)}}catch(err){document.documentElement.dataset.clubOsLive='false';$('syncState').textContent='BRIDGE OFFLINE';$('memberErrorText').textContent=`Club OS se nepodařilo načíst: ${err.message}`;$('memberError').hidden=false;if(err.message.includes('unauthorized'))location.replace('/#members')}finally{loading=false}}
+
+initPositionSelects();
+loadState(false);
+setInterval(()=>loadState(true),15000);
+setInterval(()=>{if(state.page==='chat'&&state.chatChannelId)loadChatMessages().catch(()=>{})},10000);
+setInterval(()=>{if(state.page==='voice')loadVoice().catch(()=>{})},15000);

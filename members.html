@@ -5,50 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#060606" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>RYVEX Member Zone</title>
+  <meta name="description" content="Soukromý Club OS pro členy RYVEX Esports." />
+  <title>RYVEX Club OS</title>
   <link rel="icon" href="assets/ryvex-emblem.png" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="member-club-os.css" />
 </head>
-<body class="member-page">
+<body class="member-page club-os-page">
   <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div><div class="noise"></div>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="RYVEX Esports – domů"><img src="assets/ryvex-emblem.png" alt="" /><div><strong>RYVEX</strong><span>MEMBERS</span></div></a>
+
+  <header class="topbar club-os-topbar">
+    <a class="brand" href="/" aria-label="RYVEX Esports – domů">
+      <img src="assets/ryvex-emblem.png" alt="" />
+      <div><strong>RYVEX</strong><span>CLUB OS</span></div>
+    </a>
+    <div class="club-os-status"><i></i><span id="syncState">SYNCING</span></div>
     <nav class="member-top-actions"><a href="/">Public web</a><a class="nav-cta" href="/auth/logout">Odhlásit</a></nav>
   </header>
 
-  <main class="member-shell">
-    <section class="member-hero panel">
-      <div>
-        <div class="eyebrow">PRIVATE CLUB AREA</div>
-        <h1>MEMBER<br><span>ZONE.</span></h1>
-        <p>Interní RYVEX prostor. Data se načítají až po ověření aktivního členství na Discordu.</p>
+  <main class="club-os-shell">
+    <aside class="club-os-nav" aria-label="Club OS navigace">
+      <div class="club-os-user" id="memberIdentity">
+        <div class="member-avatar">R</div>
+        <div><small>CONNECTED MEMBER</small><strong>Ověřuji účet…</strong><span>RYVEX Esports</span></div>
       </div>
-      <div class="member-identity" id="memberIdentity"><div class="member-avatar">R</div><div><small>CONNECTED MEMBER</small><strong>Ověřuji účet…</strong><span>RYVEX Esports</span></div></div>
-    </section>
+      <button class="os-nav active" data-page="overview"><span>01</span>Přehled</button>
+      <button class="os-nav" data-page="vote"><span>02</span>Hlasování</button>
+      <button class="os-nav" data-page="calendar"><span>03</span>Kalendář</button>
+      <button class="os-nav" data-page="lineup"><span>04</span>Sestava</button>
+      <button class="os-nav" data-page="statistics"><span>05</span>Statistiky</button>
+      <button class="os-nav" data-page="activity"><span>06</span>Aktivita</button>
+      <button class="os-nav" data-page="attendance"><span>07</span>Docházka</button>
+      <button class="os-nav" data-page="matches"><span>08</span>Matchday</button>
+      <button class="os-nav" data-page="positions"><span>09</span>Pozice</button>
+      <button class="os-nav" data-page="members"><span>10</span>Hráči</button>
+      <button class="os-nav" data-page="chat"><span>11</span>Chat</button>
+      <button class="os-nav" data-page="voice"><span>12</span>Voice</button>
+      <button class="os-nav" data-page="media"><span>13</span>Radio & Stream</button>
+      <button class="os-nav" data-page="support"><span>14</span>Podpora</button>
+      <button class="os-nav owner-only" data-page="management" hidden><span>15</span>Management</button>
+      <div class="nav-foot"><small>LIVE CORE v2</small><b id="systemVersion">RYVEX Manager</b></div>
+    </aside>
 
-    <section class="member-dashboard" id="memberDashboard" hidden>
-      <div class="member-kpis">
-        <article class="member-kpi panel"><span id="mMembers">—</span><strong>MEMBERS</strong><small>Club roster</small></article>
-        <article class="member-kpi panel"><span id="mOnline">—</span><strong>ONLINE</strong><small>Discord live</small></article>
-        <article class="member-kpi panel"><span id="mWins">—</span><strong>WINS</strong><small>Manager sync</small></article>
-        <article class="member-kpi panel"><span id="mForm">—</span><strong>FORM</strong><small>Recent games</small></article>
+    <section class="club-os-content">
+      <div class="club-os-mobile-nav">
+        <select id="mobilePageSelect" aria-label="Vyber sekci">
+          <option value="overview">Přehled</option><option value="vote">Hlasování</option><option value="calendar">Kalendář</option>
+          <option value="lineup">Sestava</option><option value="statistics">Statistiky</option><option value="activity">Aktivita</option>
+          <option value="attendance">Docházka</option><option value="matches">Matchday</option><option value="positions">Pozice</option>
+          <option value="members">Hráči</option><option value="chat">Chat</option><option value="voice">Voice</option>
+          <option value="media">Radio & Stream</option><option value="support">Podpora</option><option value="management" id="mobileManagement" hidden>Management</option>
+        </select>
       </div>
 
-      <div class="member-layout">
-        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">CLUB CALENDAR</div><h2>Next events</h2></div><span class="status-pill live-ok">PRIVATE LIVE</span></div><div class="member-list" id="memberEvents"></div></section>
-        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">RYVEX MANAGER</div><h2>Recent results</h2></div></div><div class="member-list" id="memberResults"></div></section>
-      </div>
-
-      <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">ROSTER</div><h2>Club members</h2></div><span class="status-pill" id="memberRosterCount">LIVE</span></div><div class="member-roster" id="memberRoster"></div></section>
-
-      <section class="member-tools">
-        <article class="panel member-tool"><span>01</span><strong>Hlasování</strong><p>Interní týmová hlasování a účast.</p><small>COMING NEXT</small></article>
-        <article class="panel member-tool"><span>02</span><strong>Lineup Studio</strong><p>Sestava, pozice a matchday příprava.</p><small>COMING NEXT</small></article>
-        <article class="panel member-tool"><span>03</span><strong>Club Center</strong><p>Interní panely RYVEX Manageru na webu.</p><small>COMING NEXT</small></article>
+      <section class="os-page active" data-page-panel="overview">
+        <div class="os-hero panel">
+          <div><div class="eyebrow">RYVEX CLUB OPERATING SYSTEM</div><h1>ONE CLUB.<br><span>ONE SYSTEM.</span></h1><p>Discord, RYVEX Manager, EA FC data, klubová aplikace a web v jednom živém ekosystému.</p></div>
+          <div class="os-hero-mark"><img id="clubLogo" src="assets/ryvex-emblem.png" alt="RYVEX" /><small id="clubSince">SINCE 2026</small></div>
+        </div>
+        <div class="member-kpis os-kpis">
+          <article class="member-kpi panel"><span id="mMembers">—</span><strong>MEMBERS</strong><small>Active roster</small></article>
+          <article class="member-kpi panel"><span id="mOnline">—</span><strong>ONLINE</strong><small>Discord + voice</small></article>
+          <article class="member-kpi panel"><span id="mWins">—</span><strong>WINS</strong><small>Match history</small></article>
+          <article class="member-kpi panel"><span id="mForm">—</span><strong>FORM</strong><small>Recent games</small></article>
+          <article class="member-kpi panel"><span id="mVote">—</span><strong>VOTE</strong><small>Current progress</small></article>
+          <article class="member-kpi panel"><span id="mScore">—</span><strong>RYVEX SCORE</strong><small>Your performance</small></article>
+        </div>
+        <div class="os-grid-two">
+          <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">NEXT UP</div><h2>Club calendar</h2></div><span class="status-pill live-ok">AUTO SYNC</span></div><div class="member-list" id="overviewEvents"></div></section>
+          <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">RECENT FORM</div><h2>Results</h2></div></div><div class="member-list" id="overviewResults"></div></section>
+        </div>
+        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">LIVE POLL</div><h2 id="overviewPollTitle">Hlasování</h2></div><button class="inline-action" data-goto="vote">Otevřít</button></div><div id="overviewPoll"></div></section>
+        <section class="os-system-strip panel"><div><small>SOURCE OF TRUTH</small><b id="systemSource">Discord + RYVEX Manager + EA FC 26</b></div><div><small>LAST SYNC</small><b id="lastSync">—</b></div><div><small>ACCESS</small><b id="accessLevel">MEMBER</b></div><div><small>STATUS</small><b class="live-text">LIVE</b></div></section>
       </section>
-    </section>
 
-    <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS DENIED</div><h2>Přístup není aktivní.</h2><p id="memberErrorText">Pro vstup musí být Discord účet členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login">Ověřit znovu</a></section>
+      <section class="os-page" data-page-panel="vote">
+        <div class="page-title"><div><div class="eyebrow">TEAM VOTE</div><h1>Hlasování</h1></div><span class="status-pill live-ok">DISCORD LIVE</span></div>
+        <section class="panel member-block" id="votePanel"></section>
+        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">HISTORY</div><h2>Hlasování stats</h2></div></div><div class="responsive-table"><table><thead><tr><th>Akce</th><th>Datum</th><th>ANO</th><th>MOŽNÁ</th><th>NE</th><th>Účast</th></tr></thead><tbody id="pollHistory"></tbody></table></div></section>
+      </section>
+
+      <section class="os-page" data-page-panel="calendar"><div class="page-title"><div><div class="eyebrow">CLUB CALENDAR</div><h1>Kalendář</h1></div><span class="status-pill">AUTO</span></div><div class="calendar-grid" id="calendarGrid"></div></section>
+
+      <section class="os-page" data-page-panel="lineup"><div class="page-title"><div><div class="eyebrow">LINEUP STUDIO</div><h1>Sestava</h1></div><span class="status-pill">LIVE DRAFT</span></div><section class="panel member-block" id="lineupPanel"></section></section>
+
+      <section class="os-page" data-page-panel="statistics"><div class="page-title"><div><div class="eyebrow">EA + MANAGER DATA</div><h1>Statistiky</h1></div><span class="status-pill live-ok">AUTO SYNC</span></div><div class="ranking-grid" id="rankingGrid"></div><section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">ACTIVE ROSTER</div><h2>Player performance</h2></div></div><div class="responsive-table"><table class="wide-table"><thead><tr><th>Hráč</th><th>POS</th><th>Z</th><th>G</th><th>A</th><th>MVP</th><th>Rating</th><th>RYVEX</th><th>Pass %</th><th>Tackle %</th></tr></thead><tbody id="statisticsTable"></tbody></table></div></section></section>
+
+      <section class="os-page" data-page-panel="activity"><div class="page-title"><div><div class="eyebrow">ACTIVITY CONTROL</div><h1>Aktivita hráčů</h1></div></div><div class="activity-list" id="activityList"></div></section>
+
+      <section class="os-page" data-page-panel="attendance"><div class="page-title"><div><div class="eyebrow">ATTENDANCE</div><h1>Docházka</h1></div></div><section class="panel member-block"><div class="responsive-table"><table><thead><tr><th>Hráč</th><th>Body</th><th>Včas</th><th>Pozdě</th><th>Omluven</th><th>No-show</th><th>Záznamy</th></tr></thead><tbody id="attendanceTable"></tbody></table></div></section></section>
+
+      <section class="os-page" data-page-panel="matches"><div class="page-title"><div><div class="eyebrow">MATCHDAY CENTER</div><h1>Zápasy & výsledky</h1></div></div><div class="matchday-list" id="matchdayList"></div></section>
+
+      <section class="os-page" data-page-panel="positions"><div class="page-title"><div><div class="eyebrow">PLAYER POSITION CENTER</div><h1>Pozice</h1></div></div><section class="panel member-block"><div class="position-editor"><label>Hlavní pozice<select id="positionPrimary"></select></label><label>Vedlejší pozice<select id="positionSecondary"></select></label><button class="btn btn-primary" id="savePosition">Uložit a synchronizovat</button><span class="action-message" id="positionMessage"></span></div></section><div class="position-roster" id="positionRoster"></div></section>
+
+      <section class="os-page" data-page-panel="members"><div class="page-title"><div><div class="eyebrow">ROSTER</div><h1>Club members</h1></div><span class="status-pill" id="memberRosterCount">LIVE</span></div><div class="member-roster expanded" id="memberRoster"></div></section>
+
+      <section class="os-page" data-page-panel="chat"><div class="page-title"><div><div class="eyebrow">DISCORD BRIDGE</div><h1>Club chat</h1></div><span class="status-pill live-ok">LIVE</span></div><div class="chat-shell panel"><aside id="chatChannels" class="chat-channels"></aside><section class="chat-room"><div class="chat-head" id="chatHead">Vyber kanál</div><div class="chat-messages" id="chatMessages"><div class="empty-inline">Načítám kanály…</div></div><form class="chat-compose" id="chatForm"><input id="chatInput" maxlength="1800" placeholder="Napiš zprávu do Discordu…" autocomplete="off" /><button type="submit">Odeslat</button></form></section></div></section>
+
+      <section class="os-page" data-page-panel="voice"><div class="page-title"><div><div class="eyebrow">VOICE CENTER</div><h1>Hlasové místnosti</h1></div><span class="status-pill">DISCORD</span></div><div class="voice-grid" id="voiceGrid"></div></section>
+
+      <section class="os-page" data-page-panel="media"><div class="page-title"><div><div class="eyebrow">MEDIA CENTER</div><h1>Radio & Stream</h1></div></div><div class="os-grid-two media-grid"><section class="panel media-card"><div class="eyebrow">RYVEX RADIO</div><h2 id="radioName">RYVEX Radio</h2><p id="radioSubtitle">24/7 club stream</p><audio id="radioPlayer" controls preload="none"></audio><small id="radioMeta">Manager sync</small></section><section class="panel media-card stream-card" id="memberStream"><div class="eyebrow">RYVEX LIVE</div><h2>Stream Center</h2><div class="stream-placeholder"><div class="play">▶</div><strong>CHECKING LIVE</strong><small>YouTube @AinslayCZ</small></div></section></div></section>
+
+      <section class="os-page" data-page-panel="support"><div class="page-title"><div><div class="eyebrow">PRIVATE SUPPORT</div><h1>Podpora</h1></div></div><section class="panel member-block" id="supportPanel"></section></section>
+
+      <section class="os-page" data-page-panel="management"><div class="page-title"><div><div class="eyebrow">OWNER CONTROL</div><h1>Management</h1></div><span class="status-pill live-ok">OWNER ONLY</span></div><div class="os-grid-two"><form class="panel member-block manage-form" id="pollCreateForm"><div class="eyebrow">NEW POLL</div><h2>Nové hlasování</h2><label>Název<input name="title" required maxlength="100" placeholder="Trénink / turnaj / zápas" /></label><label>Popis<textarea name="description" maxlength="1000" placeholder="Detaily akce"></textarea></label><label>Datum a čas<input name="startsAt" type="datetime-local" required /></label><button class="btn btn-primary" type="submit">Vytvořit hlasování</button><span class="action-message"></span></form><form class="panel member-block manage-form" id="announcementForm"><div class="eyebrow">ANNOUNCEMENT</div><h2>Klubové oznámení</h2><label>Nadpis<input name="title" required maxlength="100" placeholder="RYVEX oznámení" /></label><label>Text<textarea name="description" required maxlength="1800" placeholder="Obsah oznámení"></textarea></label><button class="btn btn-primary" type="submit">Publikovat oznámení</button><span class="action-message"></span></form></div></section>
+
+      <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS ERROR</div><h2>Club OS se nepodařilo načíst.</h2><p id="memberErrorText">Pro vstup musí být Discord účet aktivním členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login">Ověřit znovu</a></section>
+    </section>
   </main>
   <script src="members.js"></script>
 </body>
