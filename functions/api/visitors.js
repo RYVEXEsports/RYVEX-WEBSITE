@@ -14,44 +14,64 @@ function cleanVisitorId(value) {
   return /^[A-Za-z0-9-]{16,80}$/.test(id) ? id : "";
 }
 
+function managerConfig(env) {
+  const base = String(env.RYVEX_BOT_API_URL || "").replace(/\/$/, "");
+  const key = String(env.RYVEX_BOT_API_KEY || "");
+  return { base, key, configured: /^https:\/\//i.test(base) && !!key };
+}
+
+async function managerVisit(env, method, visitorId = "") {
+  const { base, key, configured } = managerConfig(env);
+  if (!configured) return null;
+  try {
+    const response = await fetch(`${base}/api/v1/site-visit`, {
+      method,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-RYVEX-API-KEY": key
+      },
+      body: method === "POST" ? JSON.stringify({ visitorId }) : undefined,
+      cf: { cacheEverything: false }
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok || body?.ok === false) return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
 export async function onRequestGet({ env }) {
   const store = env.RYVEX_VISITORS;
-  if (!store || typeof store.get !== "function") {
-    return json({ ok: true, configured: false, count: null });
+  if (store && typeof store.get === "function") {
+    const current = Number(await store.get("site:unique-visitors")) || 0;
+    return json({ ok: true, configured: true, backend: "cloudflare-kv", count: current });
   }
-
-  const current = Number(await store.get("site:unique-visitors")) || 0;
-  return json({ ok: true, configured: true, count: current });
+  const manager = await managerVisit(env, "GET");
+  if (manager) return json({ ok: true, configured: true, backend: "ryvex-manager", count: Number(manager.count) || 0 });
+  return json({ ok: true, configured: false, count: null });
 }
 
 export async function onRequestPost({ request, env }) {
-  const store = env.RYVEX_VISITORS;
-  if (!store || typeof store.get !== "function" || typeof store.put !== "function") {
-    return json({ ok: true, configured: false, count: null });
-  }
-
   let body = {};
-  try {
-    body = await request.json();
-  } catch {
-    return json({ ok: false, error: "invalid_json" }, 400);
-  }
-
+  try { body = await request.json(); } catch { return json({ ok: false, error: "invalid_json" }, 400); }
   const visitorId = cleanVisitorId(body.visitorId);
   if (!visitorId) return json({ ok: false, error: "invalid_visitor_id" }, 400);
 
-  const visitorKey = `site:visitor:${visitorId}`;
-  const alreadySeen = await store.get(visitorKey);
-  let count = Number(await store.get("site:unique-visitors")) || 0;
-
-  if (!alreadySeen) {
-    count += 1;
-    // Random anonymous ID only; no IP, Discord ID, email or fingerprint is stored.
-    await Promise.all([
-      store.put(visitorKey, "1"),
-      store.put("site:unique-visitors", String(count))
-    ]);
+  const store = env.RYVEX_VISITORS;
+  if (store && typeof store.get === "function" && typeof store.put === "function") {
+    const visitorKey = `site:visitor:${visitorId}`;
+    const alreadySeen = await store.get(visitorKey);
+    let count = Number(await store.get("site:unique-visitors")) || 0;
+    if (!alreadySeen) {
+      count += 1;
+      await Promise.all([store.put(visitorKey, "1"), store.put("site:unique-visitors", String(count))]);
+    }
+    return json({ ok: true, configured: true, backend: "cloudflare-kv", count });
   }
 
-  return json({ ok: true, configured: true, count });
+  const manager = await managerVisit(env, "POST", visitorId);
+  if (manager) return json({ ok: true, configured: true, backend: "ryvex-manager", count: Number(manager.count) || 0 });
+  return json({ ok: true, configured: false, count: null });
 }
