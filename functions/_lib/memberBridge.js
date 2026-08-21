@@ -1,4 +1,5 @@
 import { parseCookies, verifySession } from './session.js';
+import { checkManagerClubAccess } from './access.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -15,10 +16,15 @@ export async function requireMember(request, env) {
   const cookies = parseCookies(request);
   const session = await verifySession(cookies.ryvex_session, String(env.RYVEX_WEBSITE_SESSION_SECRET || ''));
   if (!session) return { ok: false, response: json({ ok: false, error: 'unauthorized' }, 401) };
+  if (session.accessType === 'visitor') return { ok: false, response: json({ ok: false, error: 'club_member_required' }, 403) };
   if (String(session.guild) !== String(env.RYVEX_GUILD_ID || '')) {
     return { ok: false, response: json({ ok: false, error: 'wrong_guild' }, 403) };
   }
-  return { ok: true, session };
+  const access = await checkManagerClubAccess(env, session.sub);
+  if (!access.active) {
+    return { ok: false, response: json({ ok: false, error: 'membership_inactive', reason: access.reason }, 403) };
+  }
+  return { ok: true, session, access };
 }
 
 function bridgeConfig(env) {
