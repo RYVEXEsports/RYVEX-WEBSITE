@@ -20,7 +20,12 @@
       <div><strong>RYVEX</strong><span>CLUB OS</span></div>
     </a>
     <div class="club-os-status"><i></i><span id="syncState">SYNCING</span></div>
-    <nav class="member-top-actions"><a href="/">Public web</a><a class="nav-cta" href="/auth/logout">Odhlásit</a></nav>
+    <nav class="member-top-actions">
+      <div class="club-os-account-badge" id="topRoleBadge" aria-label="Přihlášená klubová role">
+        <span id="topRoleName">MEMBER</span><small id="topRoleAccess">CLUB ACCESS</small>
+      </div>
+      <a href="/">Public web</a><a class="nav-cta" href="/auth/logout">Odhlásit</a>
+    </nav>
   </header>
 
   <main class="club-os-shell">
@@ -48,14 +53,28 @@
     </aside>
 
     <section class="club-os-content">
-      <div class="club-os-mobile-nav">
-        <select id="mobilePageSelect" aria-label="Vyber sekci">
-          <option value="overview">Přehled</option><option value="vote">Hlasování</option><option value="calendar">Kalendář</option>
-          <option value="lineup">Sestava</option><option value="statistics">Statistiky</option><option value="activity">Aktivita</option>
-          <option value="attendance">Docházka</option><option value="matches">Matchday</option><option value="positions">Pozice</option>
-          <option value="members">Hráči</option><option value="chat">Chat</option><option value="voice">Voice</option>
-          <option value="media">Radio & Stream</option><option value="support">Podpora</option><option value="management" id="mobileManagement" hidden>Management</option>
-        </select>
+      <div class="club-os-mobile-nav" id="clubOsMobileNav">
+        <button class="os-mobile-trigger" id="mobileNavTrigger" type="button" aria-expanded="false" aria-controls="mobileNavMenu">
+          <span class="os-mobile-trigger-copy"><small>CLUB OS</small><b id="mobileNavLabel">Přehled</b></span>
+          <span class="os-mobile-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="os-mobile-menu" id="mobileNavMenu" role="menu" hidden>
+          <button type="button" role="menuitem" class="os-mobile-item active" data-mobile-page="overview"><span>01</span><b>Přehled</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="vote"><span>02</span><b>Hlasování</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="calendar"><span>03</span><b>Kalendář</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="lineup"><span>04</span><b>Sestava</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="statistics"><span>05</span><b>Statistiky</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="activity"><span>06</span><b>Aktivita</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="attendance"><span>07</span><b>Docházka</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="matches"><span>08</span><b>Matchday</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="positions"><span>09</span><b>Pozice</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="members"><span>10</span><b>Hráči</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="chat"><span>11</span><b>Chat</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="voice"><span>12</span><b>Voice</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="media"><span>13</span><b>Radio & Stream</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item" data-mobile-page="support"><span>14</span><b>Podpora</b></button>
+          <button type="button" role="menuitem" class="os-mobile-item management-only" data-mobile-page="management" id="mobileManagement" hidden><span>15</span><b>Management</b></button>
+        </div>
       </div>
 
       <section class="os-page active" data-page-panel="overview">

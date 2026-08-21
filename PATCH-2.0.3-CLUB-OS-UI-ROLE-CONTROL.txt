@@ -1,0 +1,16 @@
+RYVEX WEBSITE 2.0.3 — CLUB OS UI + ROLE CONTROL
+
+Změněné soubory:
+- members.html
+- members.js
+- member-club-os.css
+- README.md
+
+Co patch dělá:
+1. Nahrazuje iOS nativní bílé select menu vlastním RYVEX černo-zlatým dropdownem.
+2. Zobrazuje přihlášenou Discord/Manager roli v horní liště Club OS.
+3. Zachovává stávající permissions model z Website 2.0.2 + Manager 5.0.8.
+4. Nemění public web, OAuth callback, API endpointy ani strukturu Club OS.
+
+Nasazení:
+Nahraj obsah patch ZIPu do rootu website repozitáře a přepiš existující soubory. Cloudflare Pages provede automatický deploy.

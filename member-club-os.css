@@ -5,3 +5,49 @@
 
 /* 2.0.2 role-based management */
 .admin-scope-strip{margin-bottom:16px}.admin-security-note{margin-top:16px}.admin-security-note h2{font-size:34px;margin:8px 0 12px}.admin-security-note p{max-width:900px;color:#858585;line-height:1.7}.manage-form[hidden]{display:none!important}
+
+/* 2.0.3 Club OS mobile navigation + role visibility */
+.club-os-account-badge{display:inline-grid;gap:1px;justify-items:end;padding:7px 11px;border:1px solid rgba(231,189,61,.24);border-radius:999px;background:linear-gradient(180deg,rgba(231,189,61,.08),rgba(231,189,61,.025));box-shadow:inset 0 0 0 1px rgba(255,255,255,.015)}
+.club-os-account-badge span{font-size:9px;line-height:1;font-weight:950;letter-spacing:.12em;color:var(--os-gold);white-space:nowrap}
+.club-os-account-badge small{font-size:7px;line-height:1.2;font-weight:800;letter-spacing:.08em;color:#777;white-space:nowrap}
+.club-os-account-badge[data-role*="owner"]{border-color:rgba(231,189,61,.42);box-shadow:0 0 22px rgba(231,189,61,.07),inset 0 0 0 1px rgba(255,255,255,.025)}
+
+.os-mobile-trigger{width:100%;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;border:1px solid rgba(231,189,61,.22);border-radius:16px;background:linear-gradient(180deg,#101012,#09090b);color:#fff;text-align:left;box-shadow:0 10px 28px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.02);cursor:pointer}
+.os-mobile-trigger:focus-visible{outline:2px solid rgba(231,189,61,.65);outline-offset:2px}
+.os-mobile-trigger-copy{display:grid;gap:3px;min-width:0}
+.os-mobile-trigger-copy small{font-size:7px;line-height:1;font-weight:950;letter-spacing:.18em;color:var(--os-gold)}
+.os-mobile-trigger-copy b{font-size:14px;line-height:1.25;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.os-mobile-chevron{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;border:1px solid rgba(231,189,61,.18);color:var(--os-gold);font-size:20px;line-height:1;transition:transform .2s ease,background .2s ease}
+.os-mobile-trigger[aria-expanded="true"] .os-mobile-chevron{transform:rotate(180deg);background:rgba(231,189,61,.08)}
+.os-mobile-menu{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:70;max-height:min(68vh,610px);overflow:auto;padding:8px;border:1px solid rgba(231,189,61,.2);border-radius:18px;background:rgba(8,8,10,.985);box-shadow:0 24px 70px rgba(0,0,0,.58),inset 0 0 0 1px rgba(255,255,255,.02);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.os-mobile-menu[hidden]{display:none!important}
+.os-mobile-item{width:100%;display:grid;grid-template-columns:34px 1fr;align-items:center;gap:10px;padding:11px 12px;border:0;border-radius:12px;background:transparent;color:#a5a5a5;text-align:left;cursor:pointer}
+.os-mobile-item span{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.06);border-radius:9px;color:#666;font-size:8px;font-weight:950;letter-spacing:.08em}
+.os-mobile-item b{font-size:12px;font-weight:850}
+.os-mobile-item:hover,.os-mobile-item:focus-visible{background:rgba(255,255,255,.035);color:#fff;outline:none}
+.os-mobile-item.active{background:linear-gradient(90deg,rgba(231,189,61,.12),rgba(231,189,61,.035));color:#fff}
+.os-mobile-item.active span{border-color:rgba(231,189,61,.28);background:rgba(231,189,61,.08);color:var(--os-gold)}
+.os-mobile-item.management-only:not([hidden]){margin-top:5px;border-top:1px solid rgba(231,189,61,.12);border-radius:0 0 12px 12px}
+html.club-os-menu-open body:after{content:"";position:fixed;inset:84px 0 0;z-index:7;background:rgba(0,0,0,.28);pointer-events:none}
+
+@media(max-width:980px){
+  .club-os-mobile-nav{position:sticky;top:78px;z-index:30}
+  .club-os-mobile-nav select{display:none!important}
+  .member-top-actions{gap:8px}
+  .club-os-account-badge{margin-left:auto;padding:6px 9px}
+  .club-os-account-badge span{font-size:8px}
+  .club-os-account-badge small{display:none}
+}
+@media(max-width:700px){
+  .club-os-topbar{grid-template-columns:auto 1fr;gap:8px}
+  .brand div{display:none}
+  .brand img{width:46px;height:46px}
+  .member-top-actions{justify-content:flex-end;gap:7px}
+  .member-top-actions .nav-cta{padding:10px 13px;font-size:11px}
+  .club-os-account-badge{max-width:120px}
+  .club-os-account-badge span{max-width:100px;overflow:hidden;text-overflow:ellipsis}
+  .club-os-mobile-nav{top:76px;margin-bottom:14px}
+  .os-mobile-trigger{min-height:56px;border-radius:15px}
+  .os-mobile-menu{max-height:62vh;border-radius:16px}
+  .os-mobile-item{padding:10px}
+}

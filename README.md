@@ -1,4 +1,4 @@
-# RYVEX Esports Website 2.0.2 — PREMIUM SHARP + ACCESS CONTROL
+# RYVEX Esports Website 2.0.3 — PREMIUM SHARP + ACCESS CONTROL + CLUB OS UI
 
 Kompletní webová vrstva RYVEX Esports napojená na stejný RYVEX Manager / Discord zdroj dat jako klubová aplikace.
 
@@ -104,3 +104,12 @@ Nahraj jeho obsah do kořene webového GitHub repa a nahraď existující soubor
 - `RYVEX_PUBLIC_REQUEST_WEBHOOK_URL` — volitelný Secret; pouze fallback, když Manager zatím nemá `/api/v1/public-request`.
 
 Po změně `DISCORD_REDIRECT_URI` musí být **stejná URL** přidaná v Discord Developer Portal > OAuth2 > Redirects.
+
+
+## 2.0.3 — Club OS UI + Role Control
+- Mobilní nativní `<select>` navigace byla nahrazena vlastním RYVEX černo-zlatým menu, takže iOS už neotevírá bílé systémové okno.
+- Aktivní sekce je v menu zvýrazněná zlatým stavem a menu se zavře po volbě, kliknutí mimo nebo klávese Escape.
+- V horní liště Club OS se zobrazuje živá role uživatele a úroveň přístupu z RYVEX Manageru.
+- Owner dostává vizuální FULL ACCESS badge; ostatní role zobrazují svůj skutečný access level.
+- Management zůstává server-side role based: UI pouze skrývá/neukazuje nepovolené funkce, samotné oprávnění dál vynucuje Manager.
+- Žádná změna veřejného brandingu, datových API, Discord OAuth ani struktury ostatních Club OS modulů.

@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const state = { live: null, page: 'overview', chatChannelId: null, supportType: 'help', chatLoaded: false, voiceLoaded: false };
 const POSITION_OPTIONS = ['GK','SO','LO','PO','SOZ','SZ','LSZ','PSZ','OFZ','LZ','PZ','LK','PK','HU'];
+const PAGE_LABELS = { overview:'Přehled', vote:'Hlasování', calendar:'Kalendář', lineup:'Sestava', statistics:'Statistiky', activity:'Aktivita', attendance:'Docházka', matches:'Matchday', positions:'Pozice', members:'Hráči', chat:'Chat', voice:'Voice', media:'Radio & Stream', support:'Podpora', management:'Management' };
 
 const PERMISSION_ALIASES = {
   poll: ['canCreatePoll','createPoll','managePolls','polls','canManagePolls'],
@@ -51,13 +52,28 @@ async function post(url, body) {
   if(!r.ok || data?.ok===false) throw new Error(requestError(data,r.status)); return data;
 }
 
+function closeMobileNav() {
+  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger');
+  if(menu) menu.hidden=true;
+  if(trigger) trigger.setAttribute('aria-expanded','false');
+  document.documentElement.classList.remove('club-os-menu-open');
+}
+function toggleMobileNav() {
+  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger'); if(!menu||!trigger)return;
+  const willOpen=menu.hidden;
+  menu.hidden=!willOpen;
+  trigger.setAttribute('aria-expanded',willOpen?'true':'false');
+  document.documentElement.classList.toggle('club-os-menu-open',willOpen);
+}
 function showPage(page) {
   const canManage = canOpenManagement(state.live);
   if (page === 'management' && !canManage) page = 'overview';
   state.page = page;
   document.querySelectorAll('.os-page').forEach(p=>p.classList.toggle('active',p.dataset.pagePanel===page));
   document.querySelectorAll('.os-nav').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
-  if ($('mobilePageSelect')) $('mobilePageSelect').value=page;
+  document.querySelectorAll('.os-mobile-item').forEach(b=>b.classList.toggle('active',b.dataset.mobilePage===page));
+  if($('mobileNavLabel')) $('mobileNavLabel').textContent=PAGE_LABELS[page]||'Club OS';
+  closeMobileNav();
   const u=new URL(location.href); if(page==='overview')u.searchParams.delete('page');else u.searchParams.set('page',page); history.replaceState({},'',u);
   if(page==='chat') loadChatChannels().catch(renderChatError);
   if(page==='voice') loadVoice().catch(renderVoiceError);
@@ -67,13 +83,22 @@ function showPage(page) {
 
 document.querySelectorAll('.os-nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.goto)));
-$('mobilePageSelect')?.addEventListener('change',e=>showPage(e.target.value));
+document.querySelectorAll('.os-mobile-item').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.mobilePage)));
+$('mobileNavTrigger')?.addEventListener('click',e=>{e.stopPropagation();toggleMobileNav()});
+$('mobileNavMenu')?.addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>closeMobileNav());
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileNav()});
 
 function renderIdentity(live) {
   const viewer=live.viewer||{}; const current=live.currentUser||{}; const box=$('memberIdentity'); clear(box);
+  const role=text(current.role,'MEMBER').toUpperCase();
+  const level=text(live.access?.level || current.access,'member').toUpperCase();
   box.append(avatar(viewer.avatar,viewer.name,'member-avatar'));
-  const copy=node('div'); copy.append(node('small','',`${text(current.role,'MEMBER')} • ${text(live.access?.level,'MEMBER').toUpperCase()}`),node('strong','',text(viewer.name,'RYVEX member')),node('span','',`${text(current.position,'—')} • Discord verified`)); box.append(copy);
-  $('accessLevel').textContent=text(live.access?.level || current.access,'member').toUpperCase();
+  const copy=node('div'); copy.append(node('small','',`${role} • ${level}`),node('strong','',text(viewer.name,'RYVEX member')),node('span','',`${text(current.position,'—')} • Discord verified`)); box.append(copy);
+  $('accessLevel').textContent=level;
+  if($('topRoleName')) $('topRoleName').textContent=role;
+  if($('topRoleAccess')) $('topRoleAccess').textContent=level==='OWNER'?'FULL ACCESS':`${level} ACCESS`;
+  if($('topRoleBadge')) $('topRoleBadge').dataset.role=role.toLowerCase().replace(/[^a-z0-9]+/g,'-');
 }
 
 function makeListItem(title, meta, badge='LIVE') {
