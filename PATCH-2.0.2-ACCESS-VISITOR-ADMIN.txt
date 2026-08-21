@@ -1,0 +1,49 @@
+RYVEX WEBSITE 2.0.2 — ACCESS / FAN ZONE / ROLE ADMIN
+Built on 2.0.1 PREMIUM SHARP.
+
+ZACHOVÁNO
+- černo-zlatý RYVEX design a layout
+- public Match Center, roster, stats, stream, App
+- Premium Sharp desktop úpravy 2.0.1
+- Club OS struktura, chat, voice, radio, support, Manager bridge
+
+NOVÉ
+1) CLUB MEMBER LOGIN
+- zřetelný CTA „ČLEN KLUBU • CLUB OS“
+- Discord OAuth mode=club
+- callback vyžaduje členství na klubovém Discordu a aktivní členství ověřené proti RYVEX Manageru
+- každé privátní API volání znovu ověřuje aktivní členství
+- odchod / kick / ztráta aktivního členství => Club OS API 403 + návrat na login
+
+2) FAN / VISITOR LOGIN
+- oddělený Discord OAuth mode=visitor
+- nemusí být členem klubového Discordu
+- nedostane Club OS
+- vlastní omezená Fan Zone: public stats/match, merch interest, žádost o vstup
+
+3) MERCH + RECRUITMENT
+- public teaser sekce na homepage
+- Fan Zone formulář „zájem o merch“
+- Fan Zone formulář „ucházet se o místo v klubu“
+- requesty jdou primárně do RYVEX Manager /api/v1/public-request
+- volitelný fallback na Discord webhook RYVEX_PUBLIC_REQUEST_WEBHOOK_URL
+
+4) ROLE-BASED MANAGEMENT
+- Management už není frontendově „Owner only“
+- viditelnost podle permissions z RYVEX Manageru
+- Owner = full access
+- Admin Team = pouze akce povolené Managerem / Discord role mappingem
+- podporované capability aliasy pro hlasování a oznámení
+- server-side Manager zůstává finální autorita
+
+DŮLEŽITÉ CLOUDFLARE
+- DISCORD_REDIRECT_URI nastav na https://ryvexesports.eu/auth/callback
+- stejnou URL přidej v Discord Developer Portal > OAuth2 > Redirects
+- nový volitelný Text: RYVEX_MEMBER_ROLE_IDS = roleId1,roleId2,... (dodatečný OAuth role gate)
+- nový volitelný Secret: RYVEX_PUBLIC_REQUEST_WEBHOOK_URL (fallback pro nové veřejné requesty)
+
+MANAGER
+- existující /api/v1/state se používá jako fallback pro active membership check
+- ideální nový endpoint: GET /api/v1/access
+- nový endpoint pro plnou automatizaci: POST /api/v1/public-request
+- přesný kontrakt je v MANAGER-INTEGRATION-2.0.2.md

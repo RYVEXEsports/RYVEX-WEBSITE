@@ -2,6 +2,19 @@ const $ = id => document.getElementById(id);
 const state = { live: null, page: 'overview', chatChannelId: null, supportType: 'help', chatLoaded: false, voiceLoaded: false };
 const POSITION_OPTIONS = ['GK','SO','LO','PO','SOZ','SZ','LSZ','PSZ','OFZ','LZ','PZ','LK','PK','HU'];
 
+const PERMISSION_ALIASES = {
+  poll: ['canCreatePoll','createPoll','managePolls','polls','canManagePolls'],
+  announcement: ['canCreateAnnouncement','createAnnouncement','manageAnnouncements','announcements','canManageAnnouncements'],
+  management: ['canManageClub','manageClub','canManage','management']
+};
+function hasPermission(live, capability) {
+  const p = live?.permissions || {};
+  if (p.isOwner === true) return true;
+  if (PERMISSION_ALIASES.management.some(k => p[k] === true)) return true;
+  return (PERMISSION_ALIASES[capability] || []).some(k => p[k] === true);
+}
+function canOpenManagement(live) { return hasPermission(live,'poll') || hasPermission(live,'announcement'); }
+
 function node(tag, cls = '', text = '') {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -39,8 +52,8 @@ async function post(url, body) {
 }
 
 function showPage(page) {
-  const owner = !!state.live?.permissions?.isOwner;
-  if (page === 'management' && !owner) page = 'overview';
+  const canManage = canOpenManagement(state.live);
+  if (page === 'management' && !canManage) page = 'overview';
   state.page = page;
   document.querySelectorAll('.os-page').forEach(p=>p.classList.toggle('active',p.dataset.pagePanel===page));
   document.querySelectorAll('.os-nav').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
@@ -121,14 +134,26 @@ function renderVoiceError(e){clear($('voiceGrid')).append(node('div','panel empt
 function renderMedia(live){const r=live.radio||{};$('radioName').textContent=text(r.name,'RYVEX Radio');$('radioSubtitle').textContent=text(r.subtitle,'24/7 club stream');const audio=$('radioPlayer'),stream=safeHttpUrl(r.streamUrl);if(stream&&audio.src!==stream)audio.src=stream;$('radioMeta').textContent=r.online?`ONLINE • ${text(r.codec,'stream')}${r.bitrate?` • ${r.bitrate} kbps`:''}`:'Manager stream připraven';}
 async function loadYoutube(){const frame=$('memberStream');const old=frame.querySelector('iframe');if(old)old.remove();const data=await get('/api/youtube-live').catch(()=>({online:false}));const placeholder=frame.querySelector('.stream-placeholder');if(data.online&&/^[A-Za-z0-9_-]{6,20}$/.test(data.videoId||'')){if(placeholder)placeholder.hidden=true;const iframe=node('iframe');iframe.src=`https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0`;iframe.title=text(data.title,'RYVEX LIVE');iframe.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';iframe.allowFullscreen=true;frame.append(iframe)}else if(placeholder){placeholder.hidden=false;placeholder.querySelector('strong').textContent='OFFLINE';placeholder.querySelector('small').textContent='Stream se zobrazí automaticky po spuštění YouTube LIVE.'}}
 
-function renderManagement(live){const owner=!!live.permissions?.isOwner;document.querySelectorAll('.owner-only').forEach(x=>x.hidden=!owner);if($('mobileManagement'))$('mobileManagement').hidden=!owner;if(!owner&&state.page==='management')showPage('overview')}
+function renderManagement(live){
+  const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canManage=canPoll||canAnnouncement;
+  document.querySelectorAll('.management-only').forEach(x=>x.hidden=!canManage);
+  if($('mobileManagement'))$('mobileManagement').hidden=!canManage;
+  document.querySelectorAll('[data-admin-capability="poll"]').forEach(x=>x.hidden=!canPoll);
+  document.querySelectorAll('[data-admin-capability="announcement"]').forEach(x=>x.hidden=!canAnnouncement);
+  if($('managementBadge'))$('managementBadge').textContent=owner?'OWNER • FULL ACCESS':'DISCORD ROLE • CONTROL';
+  if($('managementScope')){
+    const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ');
+    $('managementScope').textContent=roles.length?roles.join(' • '):'READ ONLY';
+  }
+  if(!canManage&&state.page==='management')showPage('overview');
+}
 $('pollCreateForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);const startsAt=new Date(fd.get('startsAt')).getTime();msg.textContent='Vytvářím…';try{await post('/api/manage',{action:'create_poll',title:fd.get('title'),description:fd.get('description'),startsAt});msg.textContent='Hlasování vytvořeno a synchronizováno do Discordu.';f.reset();await loadState(true)}catch(err){msg.textContent=`Chyba: ${err.message}`}});
 $('announcementForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);msg.textContent='Publikuji…';try{await post('/api/manage',{action:'announcement',title:fd.get('title'),text:fd.get('description')});msg.textContent='Oznámení publikováno na Discord a push.';f.reset()}catch(err){msg.textContent=`Chyba: ${err.message}`}});
 
 function renderAll(live){state.live=live;renderIdentity(live);renderOverview(live);renderVote(live);renderCalendar(live);renderLineup(live);renderStatistics(live);renderActivity(live);renderAttendance(live);renderMatches(live);renderPositions(live);renderMembers(live);renderSupport(live);renderMedia(live);renderManagement(live);$('syncState').textContent='DISCORD LIVE';document.documentElement.dataset.clubOsLive='true'}
 
 let loading=false;
-async function loadState(silent=false){if(loading)return;loading=true;try{const live=await get('/api/member-state');renderAll(live);$('memberError').hidden=true;if(!silent){const requested=new URL(location.href).searchParams.get('page')||'overview';showPage(requested)}}catch(err){document.documentElement.dataset.clubOsLive='false';$('syncState').textContent='BRIDGE OFFLINE';$('memberErrorText').textContent=`Club OS se nepodařilo načíst: ${err.message}`;$('memberError').hidden=false;if(err.message.includes('unauthorized'))location.replace('/#members')}finally{loading=false}}
+async function loadState(silent=false){if(loading)return;loading=true;try{const live=await get('/api/member-state');renderAll(live);$('memberError').hidden=true;if(!silent){const requested=new URL(location.href).searchParams.get('page')||'overview';showPage(requested)}}catch(err){document.documentElement.dataset.clubOsLive='false';$('syncState').textContent='BRIDGE OFFLINE';$('memberErrorText').textContent=`Club OS se nepodařilo načíst: ${err.message}`;$('memberError').hidden=false;if(/unauthorized|membership_inactive|club_member_required|wrong_guild/i.test(err.message))location.replace('/?auth=not_active_member#members')}finally{loading=false}}
 
 initPositionSelects();
 loadState(false);

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#060606" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="RYVEX Fan Zone – veřejná zóna, merch a žádost o vstup do klubu." />
+  <title>RYVEX Fan Zone</title>
+  <link rel="icon" href="assets/ryvex-emblem.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="visitor.css" />
+</head>
+<body class="visitor-page">
+  <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div><div class="noise"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="RYVEX Esports – domů">
+      <img src="assets/ryvex-emblem.png" alt="" />
+      <div><strong>RYVEX</strong><span>FAN ZONE</span></div>
+    </a>
+    <nav class="member-top-actions"><a href="/">Public web</a><a class="nav-cta" href="/auth/logout">Odhlásit</a></nav>
+  </header>
+
+  <main class="visitor-shell">
+    <section class="visitor-hero panel">
+      <div>
+        <div class="eyebrow">PUBLIC ACCESS • LIMITED VIEW</div>
+        <h1>RYVEX<br><span>FAN ZONE.</span></h1>
+        <p>Veřejná přihlášená zóna pro fanoušky, zájemce o klub a budoucí merch. Soukromý Club OS zůstává přístupný výhradně aktivním členům RYVEX Esports.</p>
+      </div>
+      <div class="visitor-identity" id="visitorIdentity"><div class="member-lock">R</div><div><small>DISCORD VERIFIED</small><strong>Ověřuji účet…</strong><span>LIMITED ACCESS</span></div></div>
+    </section>
+
+    <section class="visitor-stats" id="visitorStats">
+      <article class="panel"><span id="vMembers">—</span><strong>MEMBERS</strong><small>Public roster count</small></article>
+      <article class="panel"><span id="vOnline">—</span><strong>ONLINE</strong><small>Live club status</small></article>
+      <article class="panel"><span id="vWins">—</span><strong>WINS</strong><small>Recent results</small></article>
+      <article class="panel"><span id="vForm">—</span><strong>FORM</strong><small>Last matches</small></article>
+    </section>
+
+    <section class="visitor-grid">
+      <article class="panel visitor-card">
+        <div class="eyebrow">NEXT MATCH</div><h2>Match Center</h2>
+        <div id="visitorMatch" class="visitor-match">Načítám veřejná data…</div>
+        <a class="btn btn-ghost" href="/#matches">Otevřít veřejný Match Center</a>
+      </article>
+      <article class="panel visitor-card visitor-locked">
+        <div class="eyebrow">PRIVATE SYSTEM</div><h2>Club OS</h2>
+        <p>Hlasování, sestavy, interní statistiky, docházka, chat, voice a management jsou dostupné pouze aktivním členům klubu.</p>
+        <a class="btn btn-primary" href="/auth/login?mode=club">Přihlásit člena klubu</a>
+      </article>
+    </section>
+
+    <section class="panel visitor-section" id="merch">
+      <div class="visitor-section-head"><div><div class="eyebrow">RYVEX MERCH</div><h2>Club collection.</h2></div><span class="status-pill">COMING SOON</span></div>
+      <div class="merch-preview-grid">
+        <article><strong>RYVEX Jersey</strong><span>Official club jersey</span></article>
+        <article><strong>RYVEX Hoodie</strong><span>Black / gold club wear</span></article>
+        <article><strong>Supporter Pack</strong><span>Club accessories</span></article>
+      </div>
+      <form class="visitor-form" id="merchForm">
+        <label>O co máš zájem<select name="item" required><option value="">Vyber</option><option>RYVEX Jersey</option><option>RYVEX Hoodie</option><option>Supporter Pack</option><option>Jiné</option></select></label>
+        <label>Velikost / varianta<input name="size" maxlength="20" placeholder="např. L" /></label>
+        <label class="wide">Poznámka<textarea name="note" maxlength="700" placeholder="Co by tě na RYVEX merch zajímalo?"></textarea></label>
+        <button class="btn btn-primary" type="submit">Poslat zájem o merch</button><span class="form-message" id="merchMessage"></span>
+      </form>
+    </section>
+
+    <section class="panel visitor-section" id="join">
+      <div class="visitor-section-head"><div><div class="eyebrow">JOIN RYVEX</div><h2>Ucházet se o místo v klubu.</h2></div><span class="status-pill live-ok">APPLICATION</span></div>
+      <p class="visitor-lead">Žádost se odešle spolu s ověřenou Discord identitou. Vedení ji může zpracovat přes RYVEX Manager / klubový Discord.</p>
+      <form class="visitor-form" id="recruitmentForm">
+        <label>Hlavní pozice<input name="primaryPosition" required maxlength="24" placeholder="SO / HU / SZ…" /></label>
+        <label>Vedlejší pozice<input name="secondaryPosition" maxlength="24" placeholder="např. SOZ" /></label>
+        <label>Platforma<select name="platform" required><option value="">Vyber</option><option>PlayStation</option><option>Xbox</option><option>PC</option></select></label>
+        <label>Dostupnost<input name="availability" maxlength="160" placeholder="např. Po–Čt od 19:30" /></label>
+        <label class="wide">Zkušenosti<textarea name="experience" maxlength="900" placeholder="Ligy, kluby, zkušenosti s Pro Clubs…"></textarea></label>
+        <label class="wide">Proč chceš do RYVEX?<textarea name="message" required maxlength="1200" placeholder="Napiš krátce něco o sobě a co hledáš v klubu."></textarea></label>
+        <button class="btn btn-primary" type="submit">Odeslat žádost vedení</button><span class="form-message" id="recruitmentMessage"></span>
+      </form>
+    </section>
+  </main>
+  <script src="visitor.js"></script>
+</body>
+</html>

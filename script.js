@@ -300,14 +300,19 @@ async function checkMemberAccess() {
   const title = document.getElementById("memberGateTitle");
   const text = document.getElementById("memberGateText");
   const navCta = document.getElementById("memberNavCta");
+  const visitorButton = document.getElementById("visitorGateButton");
+  const visitorTitle = document.getElementById("visitorGateTitle");
+  const visitorNav = document.getElementById("visitorNavCta");
   const message = document.getElementById("authMessage");
 
   const authError = new URLSearchParams(location.search).get("auth");
   if (message && authError) {
     const messages = {
-      not_member: "Tento Discord účet není členem RYVEX Esports. Soukromá část zůstává uzamčená.",
+      not_member: "Tento Discord účet není na klubovém Discordu. Club OS zůstává uzamčený.",
+      not_active_member: "Discord účet je rozpoznaný, ale není vedený jako aktivní člen RYVEX Esports. Club OS zůstává uzamčený.",
+      membership_check_failed: "Aktivní členství se teď nepodařilo bezpečně ověřit proti RYVEX Manageru. Zkus to za chvíli znovu.",
       invalid_state: "Přihlášení vypršelo nebo bylo přerušeno. Zkus ověření znovu.",
-      not_configured: "RYVEX Club OS ještě není kompletně nastavený v Cloudflare.",
+      not_configured: "RYVEX přihlášení ještě není kompletně nastavené v Cloudflare.",
       discord_error: "Discord ověření se nepodařilo dokončit. Zkus to znovu."
     };
     message.textContent = messages[authError] || "Přihlášení se nepodařilo dokončit.";
@@ -319,11 +324,63 @@ async function checkMemberAccess() {
     const response = await fetch("/api/me", { cache: "no-store", credentials: "same-origin" });
     const data = await response.json();
     if (!data?.authenticated) return;
-    if (title) title.textContent = `Vítej, ${data.user?.name || "RYVEX member"}`;
-    if (text) text.textContent = "Členství je ověřené. Můžeš vstoupit do soukromé klubové zóny.";
-    if (button) { button.textContent = "Otevřít Club OS"; button.href = "/members.html"; }
-    if (navCta) { navCta.textContent = "Club OS ✓"; navCta.href = "/members.html"; }
+
+    if (data.accessType === "visitor") {
+      if (visitorTitle) visitorTitle.textContent = `Vítej, ${data.user?.name || "RYVEX fan"}`;
+      if (visitorButton) { visitorButton.textContent = "Otevřít Fan Zone"; visitorButton.href = "/visitor.html"; }
+      if (visitorNav) { visitorNav.textContent = "Fan Zone ✓"; visitorNav.href = "/visitor.html"; }
+      return;
+    }
+
+    if (data.activeMember) {
+      if (title) title.textContent = `Vítej, ${data.user?.name || "RYVEX member"}`;
+      if (text) text.textContent = "Aktivní členství je ověřené přes RYVEX Manager. Můžeš vstoupit do soukromého Club OS.";
+      if (button) { button.textContent = "Otevřít Club OS"; button.href = "/members.html"; }
+      if (navCta) { navCta.innerHTML = "<span>CLUB OS ✓</span><small>ACTIVE MEMBER</small>"; navCta.href = "/members.html"; }
+    } else {
+      if (text) text.textContent = "Tahle session už nemá aktivní klubový přístup. Přihlášení se musí znovu ověřit.";
+      if (button) { button.textContent = "Ověřit členství znovu"; button.href = "/auth/login?mode=club"; }
+    }
   } catch {}
 }
 
 checkMemberAccess();
+
+/* RYVEX WEBSITE 2.0.1 • privacy-friendly visitor counter
+   Uses an anonymous browser UUID and optional Cloudflare KV binding RYVEX_VISITORS. */
+async function pullVisitorCount() {
+  const shell = document.getElementById("visitorCounter");
+  const countEl = document.getElementById("visitorCount");
+  if (!shell || !countEl) return;
+
+  try {
+    let visitorId = "";
+    try {
+      visitorId = localStorage.getItem("ryvex_visitor_id") || "";
+      if (!visitorId) {
+        visitorId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem("ryvex_visitor_id", visitorId);
+      }
+    } catch {
+      visitorId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    const response = await fetch("/api/visitors", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId })
+    });
+    const data = await response.json();
+    if (!response.ok || !data?.ok || !data?.configured || !Number.isFinite(Number(data.count))) return;
+
+    countEl.textContent = new Intl.NumberFormat("cs-CZ").format(Number(data.count));
+    shell.hidden = false;
+  } catch (error) {
+    console.warn("[RYVEX website] Visitor counter unavailable:", error?.message || error);
+  }
+}
+
+pullVisitorCount();
+

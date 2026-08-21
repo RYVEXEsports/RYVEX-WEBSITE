@@ -1,0 +1,40 @@
+RYVEX WEBSITE 2.0.1 — PREMIUM SHARP DESKTOP PATCH
+==================================================
+
+CÍL PATCHU
+- zachovat současný RYVEX černo-zlatý styl, strukturu, sekce a LIVE integrace
+- odstranit rozpitý / mléčný dojem
+- využít výrazně lépe široký desktop monitor
+- zjemnit pocit „samých čtverečků“ bez redesignu
+- přidat malé anonymní počitadlo unikátních návštěvníků
+
+ZMĚNĚNO
+- styles.css: premium sharp override, širší desktop 1760–1840 px, čistší panely, méně blur/noise, ostřejší zlato a text, stats/results jako plynulé pásy místo vnořených boxů, 5–6 roster karet na široké obrazovce
+- index.html: malé počitadlo návštěv vedle RYVEX numbers
+- script.js: bezpečné načtení anonymního počitadla
+- functions/api/visitors.js: Cloudflare Pages KV endpoint
+
+NEZMĚNĚNO
+- struktura webu a navigace
+- Discord login / Club OS
+- RYVEX Manager sync
+- EA / roster / match / stats / chat / voice / vote / support funkce
+- YouTube LIVE
+- mobilní základní struktura
+- existující Cloudflare secrets
+
+POČITADLO NÁVŠTĚV — 1x CLOUDFLARE NASTAVENÍ
+1. Cloudflare > Storage & Databases > KV > Create namespace
+2. Název např. RYVEX_VISITORS
+3. Workers & Pages > ryvex-website > Settings > Bindings
+4. Add binding > KV namespace
+5. Variable name MUSÍ být přesně: RYVEX_VISITORS
+6. Vyber vytvořený namespace a Save
+7. Redeploy posledního deploymentu nebo udělej nový commit
+
+Bez KV bindingu web normálně funguje a počitadlo se pouze nezobrazí.
+Počítadlo ukládá jen náhodné anonymní UUID prohlížeče. Nezapisuje IP, Discord ID, email ani fingerprint.
+
+DEPLOY
+Balík lze nahrát jako FULL GIT do kořene repa stejně jako předchozí verzi.
+Cloudflare Pages automaticky nasadí statiku i /functions.

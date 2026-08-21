@@ -1,4 +1,4 @@
-# RYVEX Esports Website 2.0 — CLUB OS LIVE SYNC
+# RYVEX Esports Website 2.0.2 — PREMIUM SHARP + ACCESS CONTROL
 
 Kompletní webová vrstva RYVEX Esports napojená na stejný RYVEX Manager / Discord zdroj dat jako klubová aplikace.
 
@@ -88,3 +88,19 @@ Nahraj jeho obsah do kořene webového GitHub repa a nahraď existující soubor
 - Chat respektuje Discord View/Read/Send permissions.
 - Voice respektuje Discord View/Connect permissions.
 - CSP blokuje cizí skripty; externí audio je povolené jen jako HTTPS media.
+
+
+## 2.0.2 — Club member / Fan access
+- Samostatný Discord login pro aktivní členy: `/auth/login?mode=club`.
+- Samostatný omezený Fan login: `/auth/login?mode=visitor`.
+- Club access se před privátním API voláním znovu ověřuje proti RYVEX Manageru.
+- Fan Zone: `visitor.html`, merch interest a recruitment application.
+- Management UI se řídí `permissions` z Manageru; Owner má plný přístup, Admin Team pouze povolené capability.
+- Detail Manager kontraktu: `MANAGER-INTEGRATION-2.0.2.md`.
+
+### Nové / změněné Cloudflare proměnné
+- `DISCORD_REDIRECT_URI` = `https://ryvexesports.eu/auth/callback` (doporučená produkční hodnota).
+- `RYVEX_MEMBER_ROLE_IDS` — volitelný Text; čárkou oddělené Discord role ID jako dodatečný club login gate.
+- `RYVEX_PUBLIC_REQUEST_WEBHOOK_URL` — volitelný Secret; pouze fallback, když Manager zatím nemá `/api/v1/public-request`.
+
+Po změně `DISCORD_REDIRECT_URI` musí být **stejná URL** přidaná v Discord Developer Portal > OAuth2 > Redirects.

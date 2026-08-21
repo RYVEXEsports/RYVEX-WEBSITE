@@ -32,7 +32,9 @@
       <a href="#stats">Stats</a>
       <a href="#stream">Stream</a>
       <a href="#app">RYVEX App</a>
-      <a class="nav-cta" id="memberNavCta" href="#members">Club OS</a>
+      <a href="#merch">Merch</a>
+      <a id="visitorNavCta" href="/auth/login?mode=visitor">Fan Login</a>
+      <a class="nav-cta club-login-cta" id="memberNavCta" href="#members"><span>ČLEN KLUBU</span><small>CLUB OS</small></a>
     </nav>
   </header>
 
@@ -134,6 +136,13 @@
     <section class="section" id="stats">
       <div class="section-head reveal">
         <div><div class="eyebrow">CLUB DATA</div><h2>RYVEX numbers</h2></div>
+        <div class="visitor-counter" id="visitorCounter" hidden aria-live="polite" title="Anonymní počet unikátních návštěvníků webu">
+          <span class="visitor-counter-dot" aria-hidden="true"></span>
+          <div>
+            <small>NÁVŠTĚVY WEBU</small>
+            <strong id="visitorCount">—</strong>
+          </div>
+        </div>
       </div>
       <div class="stats-shell panel reveal">
         <div class="stats-grid">
@@ -184,23 +193,59 @@
       </div>
     </section>
 
+    <section class="section" id="merch">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">RYVEX MERCH</div><h2>Club collection.</h2></div>
+        <span class="status-pill">COMING SOON</span>
+      </div>
+      <div class="public-access-panel panel reveal">
+        <div>
+          <strong>RYVEX Jersey • Hoodie • Supporter gear</strong>
+          <p>Merch sekce je připravená pro klubovou kolekci. Přihlášený fanoušek může poslat zájem a vedení ho dostane přes RYVEX systém.</p>
+        </div>
+        <a class="btn btn-primary" href="/auth/login?mode=visitor">Fan Zone / Merch</a>
+      </div>
+    </section>
+
+    <section class="section" id="join">
+      <div class="public-access-panel panel reveal join-access-panel">
+        <div>
+          <div class="eyebrow">JOIN RYVEX</div>
+          <h2>Chceš hrát za RYVEX?</h2>
+          <p>Přihlas se přes Discord jako návštěvník a pošli žádost o místo v klubu. Soukromé klubové funkce se tím neodemknou.</p>
+        </div>
+        <a class="btn btn-ghost" href="/auth/login?mode=visitor">Poslat žádost</a>
+      </div>
+    </section>
+
     <section class="section" id="members">
       <div class="member-gate panel reveal">
         <div class="member-gate-copy">
-          <div class="eyebrow">RYVEX CLUB OS</div>
-          <h2>One club. One system.</h2>
-          <p>Přihlášení probíhá přes Discord. Ověřený člen dostane přístup k živému klubovému systému napojenému na RYVEX Manager, EA data a Discord.</p>
+          <div class="eyebrow">PRIVATE • ACTIVE CLUB MEMBERS ONLY</div>
+          <h2>RYVEX Club OS.</h2>
+          <p>Soukromý klubový systém je výhradně pro aktivní členy RYVEX Esports. Discord účet a členství se ověřují proti RYVEX Manageru. Po odchodu nebo odebrání z klubu se přístup automaticky zablokuje.</p>
           <div class="member-benefits">
-            <span>VOTES</span><span>LINEUPS</span><span>STATISTICS</span><span>ACTIVITY</span><span>MATCHDAY</span><span>CHAT</span><span>VOICE</span><span>SUPPORT</span>
+            <span>VOTES</span><span>LINEUPS</span><span>STATISTICS</span><span>ACTIVITY</span><span>MATCHDAY</span><span>CHAT</span><span>VOICE</span><span>ADMIN BY ROLE</span>
           </div>
           <div class="auth-message" id="authMessage" hidden></div>
         </div>
-        <div class="member-gate-card">
-          <div class="member-lock">R</div>
-          <strong id="memberGateTitle">RYVEX Club OS</strong>
-          <p id="memberGateText">Ověříme Discord účet a aktivní členství. Club OS se potom synchronizuje automaticky s Managerem a klubovým Discordem.</p>
-          <a class="btn btn-primary" id="memberGateButton" href="/auth/login">Registrovat / Přihlásit</a>
-          <small>Žádné heslo k Discordu web neukládá.</small>
+        <div class="access-choice-grid">
+          <div class="member-gate-card club-member-card">
+            <div class="member-lock">R</div>
+            <div class="access-label">ČLEN KLUBU • PRIVATE ACCESS</div>
+            <strong id="memberGateTitle">RYVEX Club OS</strong>
+            <p id="memberGateText">Ověříme Discord účet a aktivní členství přes RYVEX Manager. Jen aktivní člen dostane přístup k interním funkcím.</p>
+            <a class="btn btn-primary" id="memberGateButton" href="/auth/login?mode=club">Přihlásit člena přes Discord</a>
+            <small>Přístup je průběžně kontrolovaný. Odchod / kick = automatické uzamčení.</small>
+          </div>
+          <div class="member-gate-card visitor-gate-card">
+            <div class="visitor-lock">FAN</div>
+            <div class="access-label">NÁVŠTĚVNÍK • LIMITED ACCESS</div>
+            <strong id="visitorGateTitle">RYVEX Fan Zone</strong>
+            <p>Pro fanoušky a zájemce o klub. Merch, veřejné informace a žádost o vstup. Bez hlasování, interního chatu, sestav a managementu.</p>
+            <a class="btn btn-ghost" id="visitorGateButton" href="/auth/login?mode=visitor">Přihlásit se jako návštěvník</a>
+            <small>Discord heslo web nikdy neukládá.</small>
+          </div>
         </div>
       </div>
     </section>
@@ -208,7 +253,7 @@
 
   <footer class="footer-wrap">
     <div class="footer-brand"><img src="assets/ryvex-emblem.png" alt="" /><div><strong>RYVEX ESPORTS</strong><span>ONE CLUB. ONE LEGACY.</span></div></div>
-    <div class="footer-links"><a href="#team">Team</a><a href="#matches">Matches</a><a href="#app">App</a><a href="#members">Members</a></div>
+    <div class="footer-links"><a href="#team">Team</a><a href="#matches">Matches</a><a href="#merch">Merch</a><a href="#join">Join</a><a href="#members">Club OS</a></div>
     <div class="copyright">© <span id="year"></span> RYVEX Esports</div>
   </footer>
   <script src="script.js"></script>
