@@ -1,11 +1,13 @@
 const $ = id => document.getElementById(id);
-const state = { live: null, page: 'overview', chatChannelId: null, supportType: 'help', chatLoaded: false, voiceLoaded: false };
+const state = { live: null, page: 'overview', chatChannelId: null, supportType: 'help', chatLoaded: false, voiceLoaded: false, adminRequests: [], adminRequestFilter: 'all', adminRequestsLoaded: false, adminRequestsLoading: false };
 const POSITION_OPTIONS = ['GK','SO','LO','PO','SOZ','SZ','LSZ','PSZ','OFZ','LZ','PZ','LK','PK','HU'];
 const PAGE_LABELS = { overview:'Přehled', vote:'Hlasování', calendar:'Kalendář', lineup:'Sestava', statistics:'Statistiky', activity:'Aktivita', attendance:'Docházka', matches:'Matchday', positions:'Pozice', members:'Hráči', chat:'Chat', voice:'Voice', media:'Radio & Stream', support:'Podpora', management:'Management' };
 
 const PERMISSION_ALIASES = {
   poll: ['canCreatePoll','createPoll','managePolls','polls','canManagePolls'],
   announcement: ['canCreateAnnouncement','createAnnouncement','manageAnnouncements','announcements','canManageAnnouncements'],
+  recruitment: ['canManageRecruitment','manageRecruitment','recruitment'],
+  sport: ['canManageLineups','canManageMatches','canManageAttendance','canManageStatistics','canManageActivity'],
   management: ['canManageClub','manageClub','canManage','management']
 };
 function hasPermission(live, capability) {
@@ -14,7 +16,7 @@ function hasPermission(live, capability) {
   if (PERMISSION_ALIASES.management.some(k => p[k] === true)) return true;
   return (PERMISSION_ALIASES[capability] || []).some(k => p[k] === true);
 }
-function canOpenManagement(live) { return hasPermission(live,'poll') || hasPermission(live,'announcement'); }
+function canOpenManagement(live) { return hasPermission(live,'poll') || hasPermission(live,'announcement') || hasPermission(live,'recruitment') || hasPermission(live,'sport'); }
 
 function node(tag, cls = '', text = '') {
   const n = document.createElement(tag);
@@ -53,15 +55,17 @@ async function post(url, body) {
 }
 
 function closeMobileNav() {
-  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger');
+  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger'), backdrop=$('mobileNavBackdrop');
   if(menu) menu.hidden=true;
+  if(backdrop) backdrop.hidden=true;
   if(trigger) trigger.setAttribute('aria-expanded','false');
   document.documentElement.classList.remove('club-os-menu-open');
 }
 function toggleMobileNav() {
-  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger'); if(!menu||!trigger)return;
+  const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger'), backdrop=$('mobileNavBackdrop'); if(!menu||!trigger)return;
   const willOpen=menu.hidden;
   menu.hidden=!willOpen;
+  if(backdrop) backdrop.hidden=!willOpen;
   trigger.setAttribute('aria-expanded',willOpen?'true':'false');
   document.documentElement.classList.toggle('club-os-menu-open',willOpen);
 }
@@ -78,6 +82,7 @@ function showPage(page) {
   if(page==='chat') loadChatChannels().catch(renderChatError);
   if(page==='voice') loadVoice().catch(renderVoiceError);
   if(page==='media') loadYoutube().catch(()=>{});
+  if(page==='management' && hasPermission(state.live,'recruitment')) loadAdminRequests(false).catch(()=>{});
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -86,6 +91,7 @@ document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',(
 document.querySelectorAll('.os-mobile-item').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.mobilePage)));
 $('mobileNavTrigger')?.addEventListener('click',e=>{e.stopPropagation();toggleMobileNav()});
 $('mobileNavMenu')?.addEventListener('click',e=>e.stopPropagation());
+$('mobileNavBackdrop')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeMobileNav()});
 document.addEventListener('click',()=>closeMobileNav());
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileNav()});
 
@@ -159,21 +165,67 @@ function renderVoiceError(e){clear($('voiceGrid')).append(node('div','panel empt
 function renderMedia(live){const r=live.radio||{};$('radioName').textContent=text(r.name,'RYVEX Radio');$('radioSubtitle').textContent=text(r.subtitle,'24/7 club stream');const audio=$('radioPlayer'),stream=safeHttpUrl(r.streamUrl);if(stream&&audio.src!==stream)audio.src=stream;$('radioMeta').textContent=r.online?`ONLINE • ${text(r.codec,'stream')}${r.bitrate?` • ${r.bitrate} kbps`:''}`:'Manager stream připraven';}
 async function loadYoutube(){const frame=$('memberStream');const old=frame.querySelector('iframe');if(old)old.remove();const data=await get('/api/youtube-live').catch(()=>({online:false}));const placeholder=frame.querySelector('.stream-placeholder');if(data.online&&/^[A-Za-z0-9_-]{6,20}$/.test(data.videoId||'')){if(placeholder)placeholder.hidden=true;const iframe=node('iframe');iframe.src=`https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0`;iframe.title=text(data.title,'RYVEX LIVE');iframe.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';iframe.allowFullscreen=true;frame.append(iframe)}else if(placeholder){placeholder.hidden=false;placeholder.querySelector('strong').textContent='OFFLINE';placeholder.querySelector('small').textContent='Stream se zobrazí automaticky po spuštění YouTube LIVE.'}}
 
+function setCapabilityCard(id, allowed, allowedText='POVOLENO', deniedText='BEZ OPRÁVNĚNÍ'){
+  const textEl=$(id); if(!textEl)return;
+  textEl.textContent=allowed?allowedText:deniedText;
+  const card=textEl.closest('.admin-capability'); if(card){card.classList.toggle('allowed',allowed);card.classList.toggle('denied',!allowed);}
+}
+function renderActivePollAdmin(live, canPoll){
+  const shell=$('activePollAdmin'),box=$('activePollAdminBody'); if(!shell||!box)return;
+  shell.hidden=!canPoll; clear(box); if(!canPoll)return;
+  const poll=live.poll;
+  if(!poll){box.append(node('div','empty-inline','Aktuálně není otevřené hlasování.'));return;}
+  const copy=node('div','admin-live-poll'); copy.append(node('strong','',text(poll.title,'Hlasování')),node('small','',`${fmt(poll.startsAt).full} • ${num(poll.counts?.voted)}/${num(poll.counts?.total)} hlasovalo`));
+  const actions=node('div','admin-live-actions'); const close=node('button','btn btn-danger','Ukončit hlasování'); close.type='button'; close.dataset.closePoll=String(poll.id); actions.append(close); box.append(copy,actions);
+}
+function requestTypeLabel(type){return type==='recruitment'?'NÁBOR':type==='merch'?'MERCH':String(type||'REQUEST').toUpperCase()}
+function requestStatusLabel(status){return ({new:'NOVÉ',reviewing:'ŘEŠÍ SE',approved:'SCHVÁLENO',rejected:'ZAMÍTNUTO',closed:'UZAVŘENO'})[status]||String(status||'new').toUpperCase()}
+function renderAdminRequests(){
+  const box=clear($('adminRequestList')); if(!box)return;
+  const filter=state.adminRequestFilter; const rows=(state.adminRequests||[]).filter(r=>filter==='all'||r.type===filter||r.status===filter);
+  if(!rows.length){box.append(node('div','empty-inline',state.adminRequestsLoaded?'Žádné požadavky v tomto filtru.':'Požadavky se načítají…'));return;}
+  rows.forEach(r=>{
+    const article=node('article','admin-request'),main=node('div','admin-request-main'),head=node('div','admin-request-head');
+    head.append(node('strong','',text(r.requesterName,'Discord user')));
+    const type=node('span','admin-request-type',requestTypeLabel(r.type)); const status=node('span','admin-request-status',requestStatusLabel(r.status)); status.dataset.status=String(r.status||'new'); head.append(type,status); main.append(head);
+    main.append(node('div','admin-request-meta',`${text(r.id,'REQUEST')} • ${fmt(r.createdAt).full}${r.processedByName?` • ${text(r.processedByName)}`:''}`));
+    const fields=node('div','admin-request-fields'); Object.entries(r.data||{}).slice(0,10).forEach(([k,v])=>{const row=node('div');row.append(node('small','',k),node('span','',text(v,'')));fields.append(row)}); main.append(fields);
+    const actions=node('div','admin-request-actions');
+    [['reviewing','Řešit'],['approved','Schválit'],['rejected','Zamítnout'],['closed','Uzavřít']].forEach(([statusValue,label])=>{const b=node('button','',label);b.type='button';b.dataset.requestId=String(r.id);b.dataset.status=statusValue;b.disabled=r.status===statusValue;actions.append(b)});
+    article.append(main,actions); box.append(article);
+  });
+}
+async function loadAdminRequests(force=false){
+  if(state.adminRequestsLoading)return; if(state.adminRequestsLoaded&&!force){renderAdminRequests();return;}
+  state.adminRequestsLoading=true; const box=$('adminRequestList'); if(box&&!state.adminRequestsLoaded)box.innerHTML='<div class="empty-inline">Načítám požadavky…</div>';
+  try{const data=await get('/api/admin-requests');state.adminRequests=Array.isArray(data.requests)?data.requests:[];state.adminRequestsLoaded=true;renderAdminRequests()}catch(err){if(box)box.innerHTML=`<div class="empty-inline">Inbox není dostupný: ${text(err.message)}</div>`}finally{state.adminRequestsLoading=false}
+}
+async function setAdminRequestStatus(requestId,status,button){
+  if(button)button.disabled=true; try{await post('/api/admin-request-status',{requestId,status});await loadAdminRequests(true)}catch(err){alert(`Stav požadavku se nepodařilo změnit: ${err.message}`)}finally{if(button)button.disabled=false}
+}
 function renderManagement(live){
-  const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canManage=canPoll||canAnnouncement;
+  const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canRecruitment=hasPermission(live,'recruitment'), canSport=hasPermission(live,'sport'), canManage=canPoll||canAnnouncement||canRecruitment||canSport;
   document.querySelectorAll('.management-only').forEach(x=>x.hidden=!canManage);
   if($('mobileManagement'))$('mobileManagement').hidden=!canManage;
   document.querySelectorAll('[data-admin-capability="poll"]').forEach(x=>x.hidden=!canPoll);
   document.querySelectorAll('[data-admin-capability="announcement"]').forEach(x=>x.hidden=!canAnnouncement);
+  document.querySelectorAll('[data-admin-capability="recruitment"]').forEach(x=>x.hidden=!canRecruitment);
+  setCapabilityCard('capPoll',canPoll); setCapabilityCard('capAnnouncement',canAnnouncement); setCapabilityCard('capRecruitment',canRecruitment); setCapabilityCard('capSport',canSport,owner?'FULL CONTROL':'ROLE CONTROL');
+  renderActivePollAdmin(live,canPoll);
   if($('managementBadge'))$('managementBadge').textContent=owner?'OWNER • FULL ACCESS':'DISCORD ROLE • CONTROL';
   if($('managementScope')){
-    const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ');
+    const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ'); if(canRecruitment)roles.push('NÁBOR'); if(canSport)roles.push('SPORT');
     $('managementScope').textContent=roles.length?roles.join(' • '):'READ ONLY';
   }
+  if(canRecruitment&&state.page==='management')loadAdminRequests(false).catch(()=>{});
   if(!canManage&&state.page==='management')showPage('overview');
 }
 $('pollCreateForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);const startsAt=new Date(fd.get('startsAt')).getTime();msg.textContent='Vytvářím…';try{await post('/api/manage',{action:'create_poll',title:fd.get('title'),description:fd.get('description'),startsAt});msg.textContent='Hlasování vytvořeno a synchronizováno do Discordu.';f.reset();await loadState(true)}catch(err){msg.textContent=`Chyba: ${err.message}`}});
 $('announcementForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,msg=f.querySelector('.action-message'),fd=new FormData(f);msg.textContent='Publikuji…';try{await post('/api/manage',{action:'announcement',title:fd.get('title'),text:fd.get('description')});msg.textContent='Oznámení publikováno na Discord a push.';f.reset()}catch(err){msg.textContent=`Chyba: ${err.message}`}});
+$('activePollAdminBody')?.addEventListener('click',async e=>{const b=e.target.closest('[data-close-poll]');if(!b)return;if(!confirm('Opravdu ukončit aktuální hlasování?'))return;b.disabled=true;b.textContent='Ukončuji…';try{await post('/api/manage',{action:'close_poll',pollId:b.dataset.closePoll});await loadState(true)}catch(err){alert(`Hlasování se nepodařilo ukončit: ${err.message}`)}finally{b.disabled=false}});
+$('refreshAdminRequests')?.addEventListener('click',()=>loadAdminRequests(true));
+document.querySelectorAll('[data-request-filter]').forEach(b=>b.addEventListener('click',()=>{state.adminRequestFilter=b.dataset.requestFilter||'all';document.querySelectorAll('[data-request-filter]').forEach(x=>x.classList.toggle('active',x===b));renderAdminRequests()}));
+$('adminRequestList')?.addEventListener('click',e=>{const b=e.target.closest('[data-request-id][data-status]');if(!b)return;setAdminRequestStatus(b.dataset.requestId,b.dataset.status,b)});
 
 function renderAll(live){state.live=live;renderIdentity(live);renderOverview(live);renderVote(live);renderCalendar(live);renderLineup(live);renderStatistics(live);renderActivity(live);renderAttendance(live);renderMatches(live);renderPositions(live);renderMembers(live);renderSupport(live);renderMedia(live);renderManagement(live);$('syncState').textContent='DISCORD LIVE';document.documentElement.dataset.clubOsLive='true'}
 

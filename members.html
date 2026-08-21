@@ -8,8 +8,8 @@
   <meta name="description" content="Soukromý Club OS pro členy RYVEX Esports." />
   <title>RYVEX Club OS</title>
   <link rel="icon" href="assets/ryvex-emblem.png" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="member-club-os.css" />
+  <link rel="stylesheet" href="styles.css?v=2.1.0" />
+  <link rel="stylesheet" href="member-club-os.css?v=2.1.0" />
 </head>
 <body class="member-page club-os-page">
   <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div><div class="noise"></div>
@@ -53,6 +53,7 @@
     </aside>
 
     <section class="club-os-content">
+      <button class="os-mobile-backdrop" id="mobileNavBackdrop" type="button" hidden aria-label="Zavřít Club OS menu"></button>
       <div class="club-os-mobile-nav" id="clubOsMobileNav">
         <button class="os-mobile-trigger" id="mobileNavTrigger" type="button" aria-expanded="false" aria-controls="mobileNavMenu">
           <span class="os-mobile-trigger-copy"><small>CLUB OS</small><b id="mobileNavLabel">Přehled</b></span>
@@ -131,16 +132,41 @@
       <section class="os-page" data-page-panel="management">
         <div class="page-title"><div><div class="eyebrow">ROLE BASED CONTROL</div><h1>Management</h1></div><span class="status-pill live-ok" id="managementBadge">DISCORD ROLE • CONTROL</span></div>
         <section class="os-system-strip panel admin-scope-strip"><div><small>AUTHORIZATION</small><b>Discord role + RYVEX Manager</b></div><div><small>TVŮJ ROZSAH</small><b id="managementScope">Načítám…</b></div><div><small>SECURITY</small><b>SERVER SIDE</b></div><div><small>STATUS</small><b class="live-text">LIVE</b></div></section>
-        <div class="os-grid-two">
+
+        <section class="admin-capability-grid" id="adminCapabilityGrid" aria-label="Oprávnění managementu">
+          <article class="panel admin-capability" data-capability-card="poll"><small>01</small><div><b>Hlasování</b><span id="capPoll">Kontroluji…</span></div></article>
+          <article class="panel admin-capability" data-capability-card="announcement"><small>02</small><div><b>Oznámení</b><span id="capAnnouncement">Kontroluji…</span></div></article>
+          <article class="panel admin-capability" data-capability-card="recruitment"><small>03</small><div><b>Nábor & Merch</b><span id="capRecruitment">Kontroluji…</span></div></article>
+          <article class="panel admin-capability" data-capability-card="sport"><small>04</small><div><b>Sportovní řízení</b><span id="capSport">Kontroluji…</span></div></article>
+        </section>
+
+        <section class="panel member-block admin-live-control" id="activePollAdmin" data-admin-capability="poll" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">LIVE CONTROL</div><h2>Aktuální hlasování</h2></div><span class="status-pill live-ok">MANAGER LIVE</span></div>
+          <div id="activePollAdminBody" class="admin-live-control-body"><div class="empty-inline">Aktuálně není otevřené hlasování.</div></div>
+        </section>
+
+        <div class="os-grid-two admin-create-grid">
           <form class="panel member-block manage-form" id="pollCreateForm" data-admin-capability="poll"><div class="eyebrow">NEW POLL</div><h2>Nové hlasování</h2><label>Název<input name="title" required maxlength="100" placeholder="Trénink / turnaj / zápas" /></label><label>Popis<textarea name="description" maxlength="1000" placeholder="Detaily akce"></textarea></label><label>Datum a čas<input name="startsAt" type="datetime-local" required /></label><button class="btn btn-primary" type="submit">Vytvořit hlasování</button><span class="action-message"></span></form>
           <form class="panel member-block manage-form" id="announcementForm" data-admin-capability="announcement"><div class="eyebrow">ANNOUNCEMENT</div><h2>Klubové oznámení</h2><label>Nadpis<input name="title" required maxlength="100" placeholder="RYVEX oznámení" /></label><label>Text<textarea name="description" required maxlength="1800" placeholder="Obsah oznámení"></textarea></label><button class="btn btn-primary" type="submit">Publikovat oznámení</button><span class="action-message"></span></form>
         </div>
-        <section class="panel member-block admin-security-note"><div class="eyebrow">AUTOMATIC ACCESS</div><h2>Práva se neudělují na webu.</h2><p>Web pouze načte oprávnění z Discordu / RYVEX Manageru. Owner má plný přístup. Admin Team vidí a může používat jen akce povolené jeho rolí. Odebrání role nebo členství se projeví při dalším ověření a privátní API přístup se zablokuje.</p></section>
+
+        <section class="panel member-block admin-request-center" id="adminRequestCenter" data-admin-capability="recruitment" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">PUBLIC REQUESTS</div><h2>Nábor & Merch inbox</h2></div><button class="inline-action" id="refreshAdminRequests" type="button">Obnovit</button></div>
+          <div class="admin-request-tabs" role="tablist" aria-label="Filtr požadavků">
+            <button class="active" type="button" data-request-filter="all">Vše</button>
+            <button type="button" data-request-filter="recruitment">Nábor</button>
+            <button type="button" data-request-filter="merch">Merch</button>
+            <button type="button" data-request-filter="new">Nové</button>
+          </div>
+          <div class="admin-request-list" id="adminRequestList"><div class="empty-inline">Požadavky se načtou po otevření Managementu.</div></div>
+        </section>
+
+        <section class="panel member-block admin-security-note"><div class="eyebrow">AUTOMATIC ACCESS</div><h2>Práva se řídí Discordem a Managerem.</h2><p>Web oprávnění nevymýšlí ani neukládá. Owner má plný přístup. Club Admin a Team Admin dostávají jen své akce podle Discord rolí. Odebrání role, kick nebo odchod z klubu se při dalším ověření automaticky projeví a privátní API se uzamkne.</p><div class="admin-health-row"><span><i></i> Website</span><span><i></i> Manager API</span><span><i></i> Discord</span><span><i></i> Access Control</span></div></section>
       </section>
 
       <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS ERROR</div><h2>Club OS se nepodařilo načíst.</h2><p id="memberErrorText">Pro vstup musí být Discord účet aktivním členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login?mode=club">Ověřit znovu</a></section>
     </section>
   </main>
-  <script src="members.js"></script>
+  <script src="members.js?v=2.1.0"></script>
 </body>
 </html>

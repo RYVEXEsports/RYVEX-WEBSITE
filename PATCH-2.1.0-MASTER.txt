@@ -1,0 +1,13 @@
+RYVEX WEBSITE 2.1.0 MASTER
+
+Sloučeno:
+- 2.0.1 Premium Sharp
+- 2.0.2 Club Member / Fan Zone / Access Control
+- 2.0.3 Club OS UI + Role Control
+- 2.1.0 mobile drawer polish
+- 2.1.0 Management workspace
+- 2.1.0 poll close control
+- 2.1.0 recruitment + merch inbox
+- 2.1.0 Manager-backed visitor counter fallback
+
+Design a struktura RYVEX zůstávají zachované.
