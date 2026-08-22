@@ -1,0 +1,6 @@
+RYVEX WEBSITE 2.2.0 — MASTER SYNC
+- Design/structure preserved.
+- Discord OAuth identifies the user.
+- RYVEX Manager is the only authority for active club role and permissions.
+- Removed duplicate Cloudflare role whitelist gate from club login.
+- Former/removed members lose private access on live Manager re-check.
