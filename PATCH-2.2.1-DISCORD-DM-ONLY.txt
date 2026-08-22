@@ -1,0 +1,8 @@
+RYVEX WEBSITE 2.2.1 — DISCORD DM ONLY
+=====================================
+BASE: Website 2.2.0 MASTER SYNC
+
+- Website remains a client of RYVEX Manager Live Core.
+- New poll / announcement responses now state that recipients receive Discord DMs.
+- Website contains no independent browser Push delivery.
+- Discord OAuth, Member Zone, access control, roster, results and Club OS UI are unchanged.

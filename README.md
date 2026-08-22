@@ -25,7 +25,7 @@ Kompletní černo-zlatá RYVEX Website vrstva se zachovaným designem a struktur
 - Player/Trial: Club OS bez administračních akcí
 - tvorba hlasování přímo z webu
 - ruční ukončení aktuálního hlasování
-- publikace klubového oznámení na Discord + push
+- publikace klubového oznámení na Discord + soukromé Discord DM hráčům
 - náborový a merch inbox s workflow: NOVÉ → ŘEŠÍ SE → SCHVÁLENO / ZAMÍTNUTO / UZAVŘENO
 - všechna práva jsou znovu ověřena server-side v Manageru
 
