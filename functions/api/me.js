@@ -22,6 +22,9 @@ export async function onRequestGet({ request, env }) {
     accessType,
     activeMember,
     membershipReason: access?.reason || null,
+    accessLevel: access?.level || null,
+    permissions: access?.permissions || {},
+    accessSource: accessType === 'club' ? 'RYVEX Manager' : 'public',
     user: { id: session.sub, name: session.globalName || session.username, avatar: session.avatar || null }
   }), { headers });
 }
