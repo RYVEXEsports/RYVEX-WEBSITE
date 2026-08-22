@@ -1,5 +1,5 @@
 import { clearStateCookie, parseCookies, sessionCookie, signSession } from "../_lib/session.js";
-import { checkManagerClubAccess, oauthRoleGate } from "../_lib/access.js";
+import { checkManagerClubAccess } from "../_lib/access.js";
 
 function redirect(location, extraCookies = []) {
   const headers = new Headers({ "Location": location, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
@@ -55,10 +55,9 @@ export async function onRequestGet({ request, env }) {
 
     if (mode === "club") {
       if (!memberResponse.ok) return redirect("/?auth=not_member#members", [clearStateCookie()]);
-      const roleGate = oauthRoleGate(env, member);
-      if (roleGate.configured && !roleGate.allowed) {
-        return redirect("/?auth=not_active_member#members", [clearStateCookie()]);
-      }
+      // Discord OAuth proves identity and guild membership. RYVEX Manager is the
+      // single source of truth for active club membership, role and permissions.
+      // Do not duplicate role whitelists in Cloudflare environment variables.
       const managerAccess = await checkManagerClubAccess(env, String(user.id));
       if (!managerAccess.active) {
         return redirect(`/?auth=${Number(managerAccess.status || 0) >= 500 ? 'membership_check_failed' : 'not_active_member'}#members`, [clearStateCookie()]);
