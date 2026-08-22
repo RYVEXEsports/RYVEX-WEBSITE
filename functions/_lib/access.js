@@ -2,20 +2,6 @@ function cleanLevel(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function configuredRoleIds(env) {
-  return String(env.RYVEX_MEMBER_ROLE_IDS || '')
-    .split(',')
-    .map(v => v.trim())
-    .filter(v => /^\d{15,25}$/.test(v));
-}
-
-export function oauthRoleGate(env, discordMember) {
-  const allowed = configuredRoleIds(env);
-  if (!allowed.length) return { configured: false, allowed: true };
-  const roles = Array.isArray(discordMember?.roles) ? discordMember.roles.map(String) : [];
-  return { configured: true, allowed: allowed.some(id => roles.includes(id)) };
-}
-
 function managerConfig(env) {
   const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
   const key = String(env.RYVEX_BOT_API_KEY || '');
