@@ -89,7 +89,7 @@ export async function fetchBotState(env, viewerId) {
       headers: {
         "Accept": "application/json",
         "X-RYVEX-API-KEY": key,
-        "X-RYVEX-USER-ID": viewer
+        "X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.4.0","X-RYVEX-USER-ID": viewer
       },
       cf: { cacheTtl: 5, cacheEverything: false }
     });

@@ -13,17 +13,18 @@ function isDeniedLevel(level) {
 }
 
 function isMemberLevel(level) {
-  return ['owner','co-owner','coowner','admin','administrator','management','manager','staff','coach','captain','member','player','trial','academy'].includes(level);
+  return ['owner','co-owner','coowner','admin','administrator','club_admin','club-admin','team_admin','team-admin','management','manager','staff','coach','captain','member','player','trial','academy'].includes(level);
 }
 
 export function evaluateManagerAccess(body, userId) {
   if (!body || body.ok === false) return { active: false, reason: body?.error || 'manager_denied', permissions: {} };
   const access = body.access || body.viewerAccess || {};
+  const membership = body.membership && typeof body.membership === 'object' ? body.membership : {};
   const current = body.currentUser || body.viewer || body.member || {};
   const permissions = body.permissions && typeof body.permissions === 'object' ? body.permissions : {};
-  const level = cleanLevel(access.level || current.access || current.level || current.role);
+  const level = cleanLevel(membership.level || body.accessLevel || access.level || current.access || current.level || current.role);
 
-  const explicit = access.activeMember ?? access.active ?? current.activeMember ?? current.active ?? current.isActive;
+  const explicit = membership.activeMember ?? membership.active ?? access.activeMember ?? access.active ?? current.activeMember ?? current.active ?? current.isActive;
   if (explicit === false) return { active: false, reason: 'membership_inactive', level, permissions };
   if (access.blocked === true || access.banned === true || current.banned === true) return { active: false, reason: 'membership_blocked', level, permissions };
   if (isDeniedLevel(level)) return { active: false, reason: 'membership_inactive', level, permissions };
@@ -47,7 +48,7 @@ async function callManager(env, userId, path) {
       headers: {
         'Accept': 'application/json',
         'X-RYVEX-API-KEY': key,
-        'X-RYVEX-USER-ID': String(userId)
+        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.4.0','X-RYVEX-USER-ID': String(userId)
       },
       cf: { cacheEverything: false }
     });
