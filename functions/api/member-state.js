@@ -3,7 +3,8 @@ import { requireMember, bridgeFetch, json } from '../_lib/memberBridge.js';
 export async function onRequestGet({ request, env }) {
   const gate = await requireMember(request, env);
   if (!gate.ok) return gate.response;
-  const out = await bridgeFetch(env, gate.session.sub, '/api/v1/state');
+  let out = await bridgeFetch(env, gate.session.sub, '/api/v1/state');
+  if (!out.ok) out = await bridgeFetch(env, gate.session.sub, '/api/v1/state-core');
   if (!out.ok) return json(out.body, out.status);
   return json({
     ...out.body,
