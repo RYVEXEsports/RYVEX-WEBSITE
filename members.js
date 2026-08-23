@@ -54,6 +54,17 @@ async function post(url, body) {
   if(!r.ok || data?.ok===false) throw new Error(requestError(data,r.status)); return data;
 }
 
+async function ops(body){ return post('/api/ops',body); }
+function weeklyPlanText(days={}) {
+  const labels=[['mon','Po'],['tue','Út'],['wed','St'],['thu','Čt'],['fri','Pá'],['sat','So'],['sun','Ne']];
+  return labels.map(([key,label])=>{
+    const d=days?.[key]; if(!d||d.enabled===false)return `${label} | -`;
+    return `${label} | ${text(d.title||d.name,'Akce')} | ${text(d.time,'20:00')} | ${String(d.info||d.description||'').trim()}`.replace(/\s+$/,'');
+  }).join('\n');
+}
+function setMessage(id,value){ const el=$(id); if(el)el.textContent=String(value||''); }
+function setBusy(button,busy,label='Pracuji…'){ if(!button)return; if(busy){button.dataset.oldText=button.textContent;button.disabled=true;button.textContent=label;}else{button.disabled=false;if(button.dataset.oldText){button.textContent=button.dataset.oldText;delete button.dataset.oldText;}} }
+
 function closeMobileNav() {
   const menu=$('mobileNavMenu'), trigger=$('mobileNavTrigger'), backdrop=$('mobileNavBackdrop');
   if(menu) menu.hidden=true;
@@ -128,7 +139,17 @@ async function saveVote(pollId,choice){try{await post('/api/vote',{pollId,choice
 
 function renderCalendar(live){const grid=clear($('calendarGrid'));(live.events||[]).slice(0,30).forEach(e=>{const card=node('article','panel calendar-card');card.append(node('div','event-date',fmt(e.startsAt).full),node('h3','',text(e.title,'Klubová akce')));if(e.description)card.append(node('p','',e.description));const meta=node('div','calendar-meta');meta.append(node('span','',text(e.kindLabel||e.kind,'EVENT').toUpperCase()));if(e.competition)meta.append(node('span','',e.competition));if(e.poll?.counts)meta.append(node('span','',`HLAS ${num(e.poll.counts.voted)}/${num(e.poll.counts.total)}`));if(e.result)meta.append(node('span','',`RESULT ${e.result}`));card.append(meta);if(e.discordUrl){const a=node('a','discord-link','Otevřít na Discordu');a.href=safeHttpUrl(e.discordUrl);a.target='_blank';a.rel='noopener noreferrer';card.append(a)}grid.append(card)});if(!grid.children.length)grid.append(node('div','panel empty-inline','Kalendář je zatím prázdný.'))}
 
-function renderLineup(live){const box=clear($('lineupPanel')),l=live.lineup;if(!l){box.append(node('div','empty-inline','Aktuálně není uložená sestava.'));return;}const head=node('div','lineup-head'),copy=node('div');copy.append(node('div','eyebrow','CURRENT LINEUP'),node('h2','',text(l.formation,'FORMATION')),node('div','lineup-meta',`${text(l.status,'draft').toUpperCase()} • ${fmt(l.updatedAt).full}`));head.append(copy,node('span','status-pill',l.generated?'AUTO GENERATED':'LIVE'));box.append(head);const grid=node('div','lineup-grid');(l.assignments||[]).forEach(a=>{const s=node('div','lineup-slot');s.append(node('small','',text(a.slot,'POZICE')),node('b','',text(a.name,'VOLNÉ')),node('span','',text(a.position,'')));grid.append(s)});box.append(grid);if((l.substitutes||[]).length){box.append(node('div','eyebrow','SUBSTITUTES'));const subs=node('div','sub-list');l.substitutes.forEach(x=>subs.append(node('span','',`${text(x.name,'Hráč')} • ${(x.positions||[]).join('/')||'—'}`)));box.append(subs)}}
+function renderLineup(live){
+  const box=clear($('lineupPanel')),l=live.lineup;
+  if(!l){box.append(node('div','empty-inline','Aktuálně není uložená sestava.'));return;}
+  const head=node('div','lineup-head'),copy=node('div');
+  const approval=l.approvalRequired?` • SCHVÁLENÍ DO ${fmt(l.approvalDeadlineAt).time}`:'';
+  copy.append(node('div','eyebrow','CURRENT LINEUP • PLAYER SCORE'),node('h2','',text(l.formation,'FORMATION')),node('div','lineup-meta',`${text(l.status,'draft').toUpperCase()} • ${fmt(l.updatedAt).full}${approval}`));
+  head.append(copy,node('span','status-pill',l.generated?'PLAYER SCORE XI':'LIVE'));box.append(head);
+  const grid=node('div','lineup-grid');
+  (l.assignments||[]).forEach(a=>{const s=node('div','lineup-slot');const score=a.ryvexScore==null?'—':Number(a.ryvexScore).toFixed(1);s.append(node('small','',text(a.slotLabel||a.slot,'POZICE')),node('b','',text(a.name,'VOLNÉ')),node('span','',a.name?`${text(a.position,'')} • RYVEX ${score}`:'VOLNÉ'));grid.append(s)});box.append(grid);
+  if((l.substitutes||[]).length){box.append(node('div','eyebrow','SUBSTITUTES'));const subs=node('div','sub-list');l.substitutes.forEach(x=>subs.append(node('span','',`${text(x.name,'Hráč')} • ${(x.positions||[]).join('/')||'—'}${x.ryvexScore!=null?` • RYVEX ${Number(x.ryvexScore).toFixed(1)}`:''}`)));box.append(subs)}
+}
 
 function performanceRows(live){
   if(Array.isArray(live.statistics)&&live.statistics.length)return live.statistics;
@@ -203,6 +224,34 @@ async function loadAdminRequests(force=false){
 async function setAdminRequestStatus(requestId,status,button){
   if(button)button.disabled=true; try{await post('/api/admin-request-status',{requestId,status});await loadAdminRequests(true)}catch(err){alert(`Stav požadavku se nepodařilo změnit: ${err.message}`)}finally{if(button)button.disabled=false}
 }
+function renderPlatformObservability(live){
+  const center=live?.centers?.platforms||{},grid=clear($('platformStatusGrid')),analytics=live?.analytics||center.analytics||{};
+  const labels={online:'ONLINE',standby:'READY / STANDBY',stale:'STALE',degraded:'DEGRADED',waiting:'WAITING'};
+  (center.rows||[]).forEach(row=>{const card=node('div',`platform-status-card ${row.status||'waiting'}`),dot=node('i','platform-status-dot'),copy=node('div');copy.append(node('b','',text(row.label,row.platform)),node('small','',`${labels[row.status]||String(row.status||'WAITING').toUpperCase()}${row.version?` • v${row.version}`:''}${row.lastSeenAt?` • ${fmt(row.lastSeenAt).time}`:''}`));card.append(dot,copy);grid.append(card)});if(grid&&!grid.children.length)grid.append(node('div','empty-inline','Platform heartbeat zatím nebyl přijat.'));
+  const ag=clear($('platformAnalyticsGrid'));[['WEB',analytics.website],['APP',analytics.app]].forEach(([label,m])=>{const c=node('div','platform-analytics-card');c.append(node('strong','',m?.unique??0),node('span','',`${label} UNIQUE`),node('small','',`dnes ${m?.todayUnique??0} • views ${m?.pageViews??0}`));ag.append(c)});const r=live?.centers?.realtime||{},replay=node('div','platform-analytics-card');replay.append(node('strong','',r.replayDepth??0),node('span','','EVENT REPLAY'),node('small','',`limit ${r.replayLimit??120}`));ag.append(replay);
+  if($('eventReplayState'))$('eventReplayState').textContent=`Realtime ${text(r.transport,'SSE').toUpperCase()} • revision ${r.revision??'—'} • replay ${r.replayDepth??0}/${r.replayLimit??120}`;
+  const audit=clear($('auditTimelineList')),rows=live?.centers?.auditTimeline?.rows||[];rows.slice(0,40).forEach(row=>{const item=node('div','audit-timeline-row'),pill=node('span',`audit-source ${row.source||'manager'}`,String(row.source||'manager').toUpperCase()),copy=node('div');copy.append(node('b','',text(row.action,'change')),node('small','',`${text(row.actor,'system')} • ${fmt(row.at).full}`));item.append(pill,copy);audit.append(item)});if(audit&&!audit.children.length)audit.append(node('div','empty-inline','Zatím bez cross-platform událostí.'));
+}
+
+function renderUnifiedManagement(live){
+  const owner=!!live.permissions?.isOwner, centers=live.centers||{}, voting=centers.voting||{}, lineupCenter=centers.lineup||{}, automation=centers.automation||{}, l=lineupCenter.active||live.lineup||null;
+  document.querySelectorAll('.owner-only').forEach(x=>x.hidden=!owner);
+  const planner=$('weeklyPlanner'); if(planner&&document.activeElement!==planner)planner.value=weeklyPlanText(voting.weekly?.days||{});
+  if($('toggleWeeklyAuto'))$('toggleWeeklyAuto').textContent=`Auto tvorba: ${voting.weekly?.enabled?'ZAP':'VYP'}`;
+  if($('toggleVotingCleanup'))$('toggleVotingCleanup').textContent=`Noční úklid: ${voting.cleanup?.enabled?'ZAP':'VYP'}`;
+  const pollList=clear($('openPollAdminList')); (voting.openPolls||[]).forEach(p=>{const row=node('div','unified-row'),copy=node('div');copy.append(node('b','',text(p.title,'Hlasování')),node('small','',`${fmt(p.startsAt).full} • ${num(p.counts?.voted)}/${num(p.counts?.total)} hlasovalo`));const b=node('button','inline-action btn-danger','Zrušit');b.type='button';b.dataset.cancelPoll=String(p.id);row.append(copy,b);pollList.append(row)}); if(pollList&&!pollList.children.length)pollList.append(node('div','empty-inline','Žádná otevřená hlasování.'));
+  const formSel=$('lineupFormation'); if(formSel){const current=formSel.value;clear(formSel);(lineupCenter.formations||['3-5-2','4-4-2','4-4-1-1','4-2-1-3']).forEach(f=>{const o=node('option','',f);o.value=f;formSel.append(o)});formSel.value=l?.formation||current||formSel.options[0]?.value||'';}
+  const pollSel=$('lineupPollSelect'); if(pollSel){const chosen=String(l?.pollId||pollSel.value||'');clear(pollSel);const blank=node('option','','Vyber hlasování');blank.value='';pollSel.append(blank);(voting.openPolls||[]).forEach(p=>{const o=node('option','',`${fmt(p.startsAt).full} — ${text(p.title)}`);o.value=String(p.id);pollSel.append(o)});pollSel.value=chosen;}
+  const rows=clear($('lineupAdminRows')); if(l){(l.assignments||[]).forEach(a=>{const row=node('div','unified-row'),copy=node('div');copy.append(node('b','',`${text(a.slotLabel||a.slot,'Pozice')} — ${text(a.name,'VOLNÉ')}`),node('small','',a.name?`${text(a.position,'')} • RYVEX ${a.ryvexScore==null?'—':Number(a.ryvexScore).toFixed(1)}`:'Volná pozice'));row.append(copy);rows.append(row)});} else if(rows)rows.append(node('div','empty-inline','Lineup draft zatím není dostupný.'));
+  const slotSelects=[$('lineupAssignSlot'),$('lineupSwapA'),$('lineupSwapB')].filter(Boolean); slotSelects.forEach(sel=>{const old=sel.value;clear(sel);const first=node('option','','Vyber pozici');first.value='';sel.append(first);(l?.assignments||[]).forEach((a,i)=>{const o=node('option','',text(a.slotLabel||a.slot,`Pozice ${i+1}`));o.value=String(a.slotKey||'');sel.append(o)});sel.value=old;});
+  const playerSel=$('lineupAssignPlayer'); if(playerSel){const old=playerSel.value;clear(playerSel);const first=node('option','','Vyber hráče');first.value='';playerSel.append(first);(live.members||[]).forEach(m=>{const o=node('option','',`${text(m.name,'Hráč')} • ${text(m.position||m.pos,'—')}`);o.value=String(m.id);playerSel.append(o)});playerSel.value=old;}
+  if($('lineupPublish'))$('lineupPublish').disabled=Boolean(l?.approvalRequired&&!lineupCenter.canApprove);
+  const matchSel=$('matchdayMatchSelect'); if(matchSel){const chosen=matchSel.value||String(centers.matchday?.selectedMatchId||'');clear(matchSel);const blank=node('option','','Všechny / poslední');blank.value='';matchSel.append(blank);(live.matches||[]).forEach(m=>{const o=node('option','',`${fmt(m.startsAt).date} — RYVEX vs ${text(m.opponent,'Soupeř')}${m.score?` • ${m.score}`:''}`);o.value=String(m.id);matchSel.append(o)});matchSel.value=chosen;}
+  const autoSettings=automation.settings||{}; document.querySelectorAll('[data-auto-key]').forEach(b=>{const on=Boolean(autoSettings[b.dataset.autoKey]);b.classList.toggle('active',on);b.dataset.enabled=on?'1':'0';const base={enabled:'Automatizace',pollReminders:'DM remindery',autoClosePolls:'Auto close',matchReminders:'Match DM',autoLineup:'Auto lineup'}[b.dataset.autoKey]||b.dataset.autoKey;b.textContent=`${base}: ${on?'ZAP':'VYP'}`;});
+  const health=centers.health||{}; if($('healthDiscord'))$('healthDiscord').lastChild.textContent=` Discord ${health.discord?'ONLINE':'OFFLINE'}`; if($('healthEa'))$('healthEa').lastChild.textContent=` EA ${health.ea?.enabled?(health.ea?.lastError?'CHECK':'ONLINE'):'OFF'}`; if($('healthManager'))$('healthManager').lastChild.textContent=` Manager API ${centers.realtime?.transport==='sse'?'REALTIME':'LIVE'}`;
+  renderPlatformObservability(live);
+}
+
 function renderManagement(live){
   const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canRecruitment=hasPermission(live,'recruitment'), canSport=hasPermission(live,'sport'), canManage=canPoll||canAnnouncement||canRecruitment||canSport;
   document.querySelectorAll('.management-only').forEach(x=>x.hidden=!canManage);
@@ -210,8 +259,9 @@ function renderManagement(live){
   document.querySelectorAll('[data-admin-capability="poll"]').forEach(x=>x.hidden=!canPoll);
   document.querySelectorAll('[data-admin-capability="announcement"]').forEach(x=>x.hidden=!canAnnouncement);
   document.querySelectorAll('[data-admin-capability="recruitment"]').forEach(x=>x.hidden=!canRecruitment);
+  document.querySelectorAll('[data-admin-capability="sport"]').forEach(x=>x.hidden=!canSport);
   setCapabilityCard('capPoll',canPoll); setCapabilityCard('capAnnouncement',canAnnouncement); setCapabilityCard('capRecruitment',canRecruitment); setCapabilityCard('capSport',canSport,owner?'FULL CONTROL':'ROLE CONTROL');
-  renderActivePollAdmin(live,canPoll);
+  renderActivePollAdmin(live,canPoll); renderUnifiedManagement(live);
   if($('managementBadge'))$('managementBadge').textContent=owner?'OWNER • FULL ACCESS':'DISCORD ROLE • CONTROL';
   if($('managementScope')){
     const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ'); if(canRecruitment)roles.push('NÁBOR'); if(canSport)roles.push('SPORT');
@@ -227,13 +277,43 @@ $('refreshAdminRequests')?.addEventListener('click',()=>loadAdminRequests(true))
 document.querySelectorAll('[data-request-filter]').forEach(b=>b.addEventListener('click',()=>{state.adminRequestFilter=b.dataset.requestFilter||'all';document.querySelectorAll('[data-request-filter]').forEach(x=>x.classList.toggle('active',x===b));renderAdminRequests()}));
 $('adminRequestList')?.addEventListener('click',e=>{const b=e.target.closest('[data-request-id][data-status]');if(!b)return;setAdminRequestStatus(b.dataset.requestId,b.dataset.status,b)});
 
-function renderAll(live){state.live=live;renderIdentity(live);renderOverview(live);renderVote(live);renderCalendar(live);renderLineup(live);renderStatistics(live);renderActivity(live);renderAttendance(live);renderMatches(live);renderPositions(live);renderMembers(live);renderSupport(live);renderMedia(live);renderManagement(live);$('syncState').textContent='DISCORD LIVE';document.documentElement.dataset.clubOsLive='true'}
+$('saveWeeklyPlanner')?.addEventListener('click',async e=>{const b=e.currentTarget;setBusy(b,true,'Ukládám…');setMessage('votingPlannerMessage','Synchronizuji planner…');try{await ops({action:'voting.plan.set',plan:$('weeklyPlanner')?.value||''});setMessage('votingPlannerMessage','Planner uložen do Manageru a rozeslán do všech klientů.');await loadState(true)}catch(err){setMessage('votingPlannerMessage',`Chyba: ${err.message}`)}finally{setBusy(b,false)}});
+$('toggleWeeklyAuto')?.addEventListener('click',async e=>{const enabled=!Boolean(state.live?.centers?.voting?.weekly?.enabled);setBusy(e.currentTarget,true);try{await ops({action:'voting.auto.set',enabled});await loadState(true)}catch(err){alert(`Auto tvorbu nelze změnit: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('toggleVotingCleanup')?.addEventListener('click',async e=>{const enabled=!Boolean(state.live?.centers?.voting?.cleanup?.enabled);setBusy(e.currentTarget,true);try{await ops({action:'voting.cleanup.set',enabled});await loadState(true)}catch(err){alert(`Noční úklid nelze změnit: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('runVotingCleanup')?.addEventListener('click',async e=>{if(!confirm('Vyčistit kanál hlasování a zachovat řídicí centrum?'))return;setBusy(e.currentTarget,true,'Čistím…');try{await ops({action:'voting.cleanup.run'});await loadState(true)}catch(err){alert(`Úklid selhal: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('openPollAdminList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-cancel-poll]');if(!b)return;if(!confirm('Zrušit toto hlasování?'))return;setBusy(b,true,'Ruším…');try{await ops({action:'voting.cancel',pollId:b.dataset.cancelPoll});await loadState(true)}catch(err){alert(`Hlasování nelze zrušit: ${err.message}`)}finally{setBusy(b,false)}});
+$('lineupSetFormation')?.addEventListener('click',async e=>{setBusy(e.currentTarget,true);setMessage('lineupAdminMessage','Měním formaci…');try{await ops({action:'lineup.formation.set',formation:$('lineupFormation')?.value});await loadState(true);setMessage('lineupAdminMessage','Formace synchronizována.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('lineupSelectPoll')?.addEventListener('click',async e=>{const pollId=$('lineupPollSelect')?.value;if(!pollId)return setMessage('lineupAdminMessage','Vyber hlasování.');setBusy(e.currentTarget,true);try{await ops({action:'lineup.select_poll',pollId});await loadState(true);setMessage('lineupAdminMessage','Hlasování vybráno.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('lineupGenerate')?.addEventListener('click',async e=>{const pollId=$('lineupPollSelect')?.value||state.live?.lineup?.pollId||null;setBusy(e.currentTarget,true,'Generuji…');setMessage('lineupAdminMessage','Počítám Player Score XI…');try{await ops({action:'lineup.generate',pollId});await loadState(true);setMessage('lineupAdminMessage','Player Score XI připravena.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('lineupPublish')?.addEventListener('click',async e=>{if(!confirm('Publikovat aktuální sestavu a oznámit ji hráčům?'))return;setBusy(e.currentTarget,true,'Publikuji…');try{await ops({action:'lineup.publish'});await loadState(true);setMessage('lineupAdminMessage','Sestava publikována.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('lineupAssignPlayerBtn')?.addEventListener('click',async e=>{const slotKey=$('lineupAssignSlot')?.value,userId=$('lineupAssignPlayer')?.value;if(!slotKey||!userId)return setMessage('lineupAdminMessage','Vyber pozici i hráče.');setBusy(e.currentTarget,true);try{await ops({action:'lineup.assign',slotKey,userId});await loadState(true);setMessage('lineupAdminMessage','Hráč dosazen a synchronizován.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('lineupSwapBtn')?.addEventListener('click',async e=>{const firstKey=$('lineupSwapA')?.value,secondKey=$('lineupSwapB')?.value;if(!firstKey||!secondKey||firstKey===secondKey)return setMessage('lineupAdminMessage','Vyber dvě rozdílné pozice.');setBusy(e.currentTarget,true);try{await ops({action:'lineup.swap',firstKey,secondKey});await loadState(true);setMessage('lineupAdminMessage','Pozice prohozeny.')}catch(err){setMessage('lineupAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('automationToggles')?.addEventListener('click',async e=>{const b=e.target.closest('[data-auto-key]');if(!b)return;const key=b.dataset.autoKey,enabled=b.dataset.enabled!=='1';setBusy(b,true);try{await ops({action:'automation.patch',[key]:enabled});await loadState(true)}catch(err){setMessage('automationMessage',`Chyba: ${err.message}`)}finally{setBusy(b,false)}});
+$('runAutomation')?.addEventListener('click',async e=>{setBusy(e.currentTarget,true,'Spouštím…');try{await ops({action:'automation.run'});setMessage('automationMessage','Automatizační cyklus proběhl.');await loadState(true)}catch(err){setMessage('automationMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('matchCreateForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,b=f.querySelector('button[type="submit"]'),fd=new FormData(f),startsAt=new Date(fd.get('startsAt')).getTime();setBusy(b,true,'Vytvářím…');setMessage('matchdayAdminMessage','Vytvářím Matchday bez nového hlasování…');try{await ops({action:'match.create',opponent:fd.get('opponent'),competition:fd.get('competition'),startsAt,location:fd.get('location'),description:fd.get('description')});f.reset();await loadState(true);setMessage('matchdayAdminMessage','Matchday vytvořen a hráči dostali DM.')}catch(err){setMessage('matchdayAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(b,false)}});
+$('runEaSync')?.addEventListener('click',async e=>{setBusy(e.currentTarget,true,'EA Sync…');try{await ops({action:'match.ea_sync',matchId:$('matchdayMatchSelect')?.value||''});await loadState(true);setMessage('matchdayAdminMessage','EA statistiky synchronizovány.')}catch(err){setMessage('matchdayAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+$('publishMatchResult')?.addEventListener('click',async e=>{const matchId=$('matchdayMatchSelect')?.value;if(!matchId)return setMessage('matchdayAdminMessage','Vyber zápas.');if(!confirm('Publikovat načtený výsledek?'))return;setBusy(e.currentTarget,true,'Publikuji…');try{await ops({action:'match.publish',matchId});await loadState(true);setMessage('matchdayAdminMessage','Výsledek publikován.')}catch(err){setMessage('matchdayAdminMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+
+function renderAll(live){state.live=live;renderIdentity(live);renderOverview(live);renderVote(live);renderCalendar(live);renderLineup(live);renderStatistics(live);renderActivity(live);renderAttendance(live);renderMatches(live);renderPositions(live);renderMembers(live);renderSupport(live);renderMedia(live);renderManagement(live);$('syncState').textContent=state.realtimeConnected?'REALTIME LIVE':'DISCORD LIVE';document.documentElement.dataset.clubOsLive='true'}
 
 let loading=false;
 async function loadState(silent=false){if(loading)return;loading=true;try{const live=await get('/api/member-state');renderAll(live);$('memberError').hidden=true;if(!silent){const requested=new URL(location.href).searchParams.get('page')||'overview';showPage(requested)}}catch(err){document.documentElement.dataset.clubOsLive='false';$('syncState').textContent='BRIDGE OFFLINE';$('memberErrorText').textContent=`Club OS se nepodařilo načíst: ${err.message}`;$('memberError').hidden=false;if(/unauthorized|membership_inactive|club_member_required|wrong_guild/i.test(err.message))location.replace('/?auth=not_active_member#members')}finally{loading=false}}
 
+let realtimeSource=null, realtimeReloadTimer=null;
+function connectRealtime(){
+  if(!('EventSource' in window))return;
+  try{
+    realtimeSource?.close?.(); realtimeSource=new EventSource('/api/stream',{withCredentials:true});
+    realtimeSource.addEventListener('ready',()=>{state.realtimeConnected=true;if($('syncState'))$('syncState').textContent='REALTIME LIVE';document.documentElement.dataset.realtime='true';});
+    realtimeSource.addEventListener('change',()=>{clearTimeout(realtimeReloadTimer);realtimeReloadTimer=setTimeout(()=>loadState(true),80);});
+    realtimeSource.addEventListener('replay',()=>{clearTimeout(realtimeReloadTimer);realtimeReloadTimer=setTimeout(()=>loadState(true),40);});
+    realtimeSource.addEventListener('reset',()=>{clearTimeout(realtimeReloadTimer);realtimeReloadTimer=setTimeout(()=>loadState(true),40);});
+    realtimeSource.onerror=()=>{state.realtimeConnected=false;document.documentElement.dataset.realtime='false';if($('syncState'))$('syncState').textContent='LIVE FALLBACK';};
+  }catch{state.realtimeConnected=false;}
+}
 initPositionSelects();
-loadState(false);
-setInterval(()=>loadState(true),15000);
+loadState(false).finally(connectRealtime);
+setInterval(()=>loadState(true),30000);
 setInterval(()=>{if(state.page==='chat'&&state.chatChannelId)loadChatMessages().catch(()=>{})},10000);
 setInterval(()=>{if(state.page==='voice')loadVoice().catch(()=>{})},15000);
+window.addEventListener('beforeunload',()=>realtimeSource?.close?.());

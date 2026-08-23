@@ -349,38 +349,11 @@ checkMemberAccess();
 /* RYVEX WEBSITE 2.0.1 • privacy-friendly visitor counter
    Uses an anonymous browser UUID and optional Cloudflare KV binding RYVEX_VISITORS. */
 async function pullVisitorCount() {
-  const shell = document.getElementById("visitorCounter");
-  const countEl = document.getElementById("visitorCount");
-  if (!shell || !countEl) return;
-
-  try {
-    let visitorId = "";
-    try {
-      visitorId = localStorage.getItem("ryvex_visitor_id") || "";
-      if (!visitorId) {
-        visitorId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
-        localStorage.setItem("ryvex_visitor_id", visitorId);
-      }
-    } catch {
-      visitorId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
-    }
-
-    const response = await fetch("/api/visitors", {
-      method: "POST",
-      cache: "no-store",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ visitorId })
-    });
-    const data = await response.json();
-    if (!response.ok || !data?.ok || !data?.configured || !Number.isFinite(Number(data.count))) return;
-
-    countEl.textContent = new Intl.NumberFormat("cs-CZ").format(Number(data.count));
-    shell.hidden = false;
-  } catch (error) {
-    console.warn("[RYVEX website] Visitor counter unavailable:", error?.message || error);
-  }
+  const shell=document.getElementById("visitorCounter"),countEl=document.getElementById("visitorCount"),todayEl=document.getElementById("visitorToday"),viewsEl=document.getElementById("visitorViews");if(!shell||!countEl)return;
+  try{let visitorId="";try{visitorId=localStorage.getItem("ryvex_visitor_id")||"";if(!visitorId){visitorId=crypto.randomUUID?crypto.randomUUID():`${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;localStorage.setItem("ryvex_visitor_id",visitorId)}}catch{visitorId=crypto.randomUUID?crypto.randomUUID():`${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`}
+    const response=await fetch("/api/visitors",{method:"POST",cache:"no-store",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({visitorId})});const data=await response.json();const m=data?.metrics;if(!response.ok||!data?.ok||!data?.configured||!m||!Number.isFinite(Number(m.unique)))return;
+    countEl.textContent=new Intl.NumberFormat("cs-CZ").format(Number(m.unique));if(todayEl)todayEl.textContent=m.todayUnique==null?"—":new Intl.NumberFormat("cs-CZ").format(Number(m.todayUnique));if(viewsEl)viewsEl.textContent=m.pageViews==null?"—":new Intl.NumberFormat("cs-CZ").format(Number(m.pageViews));shell.hidden=false;
+  }catch(error){console.warn("[RYVEX website] Visitor counter unavailable:",error?.message||error)}
 }
-
 pullVisitorCount();
 

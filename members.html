@@ -8,8 +8,8 @@
   <meta name="description" content="Soukromý Club OS pro členy RYVEX Esports." />
   <title>RYVEX Club OS</title>
   <link rel="icon" href="assets/ryvex-emblem.png" />
-  <link rel="stylesheet" href="styles.css?v=2.1.0" />
-  <link rel="stylesheet" href="member-club-os.css?v=2.1.0" />
+  <link rel="stylesheet" href="styles.css?v=2.3.0" />
+  <link rel="stylesheet" href="member-club-os.css?v=2.3.0" />
 </head>
 <body class="member-page club-os-page">
   <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div><div class="noise"></div>
@@ -49,7 +49,7 @@
       <button class="os-nav" data-page="media"><span>13</span>Radio & Stream</button>
       <button class="os-nav" data-page="support"><span>14</span>Podpora</button>
       <button class="os-nav management-only" data-page="management" hidden><span>15</span>Management</button>
-      <div class="nav-foot"><small>LIVE CORE v2</small><b id="systemVersion">RYVEX Manager</b></div>
+      <div class="nav-foot"><small>LIVE CORE v3</small><b id="systemVersion">RYVEX Manager</b></div>
     </aside>
 
     <section class="club-os-content">
@@ -150,6 +150,39 @@
           <form class="panel member-block manage-form" id="announcementForm" data-admin-capability="announcement"><div class="eyebrow">ANNOUNCEMENT</div><h2>Klubové oznámení</h2><label>Nadpis<input name="title" required maxlength="100" placeholder="RYVEX oznámení" /></label><label>Text<textarea name="description" required maxlength="1800" placeholder="Obsah oznámení"></textarea></label><button class="btn btn-primary" type="submit">Publikovat oznámení</button><span class="action-message"></span></form>
         </div>
 
+        <section class="panel member-block unified-admin" id="votingPlannerAdmin" data-admin-capability="poll" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">VOTING CENTER • REALTIME</div><h2>Týdenní Voting Planner</h2></div><span class="status-pill live-ok">16:30 • 17:00 • 17:30</span></div>
+          <p class="admin-help">Stejný planner jako v Manageru. Jedna změna se okamžitě propíše do Discordu, App i Website.</p>
+          <label class="unified-field">1 řádek = den | název | čas | info<textarea id="weeklyPlanner" rows="7" spellcheck="false" placeholder="Po | Trénink | 20:00 | Taktika
+Út | Liga | 20:00 | CPG"></textarea></label>
+          <div class="unified-actions"><button class="btn btn-primary" id="saveWeeklyPlanner" type="button">Uložit planner</button><button class="inline-action" id="toggleWeeklyAuto" type="button">Auto tvorba</button><button class="inline-action owner-only" id="toggleVotingCleanup" type="button" hidden>Noční úklid</button><button class="inline-action owner-only" id="runVotingCleanup" type="button" hidden>Vyčistit teď</button></div>
+          <span class="action-message" id="votingPlannerMessage"></span>
+          <div class="unified-list" id="openPollAdminList"></div>
+        </section>
+
+        <section class="panel member-block unified-admin" id="lineupAdmin" data-admin-capability="sport" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">LINEUP INTELLIGENCE</div><h2>Player Score sestava</h2></div><span class="status-pill">MANAGER CORE</span></div>
+          <p class="admin-help">Formace, zdrojové hlasování, RYVEX Player Score a publikace používají stejný draft jako Discord Lineup Studio.</p>
+          <div class="unified-form-grid"><label>Formace<select id="lineupFormation"></select></label><label>Hlasování<select id="lineupPollSelect"></select></label></div>
+          <div class="unified-actions"><button class="inline-action" id="lineupSetFormation" type="button">Nastavit formaci</button><button class="inline-action" id="lineupSelectPoll" type="button">Vybrat hlasování</button><button class="btn btn-primary" id="lineupGenerate" type="button">Vygenerovat Player Score XI</button><button class="btn btn-primary" id="lineupPublish" type="button">Potvrdit / publikovat</button></div>
+          <span class="action-message" id="lineupAdminMessage"></span><div class="unified-list" id="lineupAdminRows"></div>
+          <div class="eyebrow unified-subtitle">MANUAL EDIT</div><div class="unified-form-grid"><label>Pozice<select id="lineupAssignSlot"><option value="">Vyber pozici</option></select></label><label>Hráč<select id="lineupAssignPlayer"><option value="">Vyber hráče</option></select></label></div><div class="unified-actions"><button class="inline-action" id="lineupAssignPlayerBtn" type="button">Dosadit hráče</button></div>
+          <div class="unified-form-grid"><label>První pozice<select id="lineupSwapA"><option value="">Vyber pozici</option></select></label><label>Druhá pozice<select id="lineupSwapB"><option value="">Vyber pozici</option></select></label></div><div class="unified-actions"><button class="inline-action" id="lineupSwapBtn" type="button">Prohodit pozice</button></div>
+        </section>
+
+        <section class="panel member-block unified-admin" id="automationAdmin" data-admin-capability="poll" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">AUTOMATION CENTER</div><h2>Klubová automatizace</h2></div><span class="status-pill live-ok">LIVE</span></div>
+          <div class="toggle-grid" id="automationToggles"><button type="button" data-auto-key="enabled">Automatizace</button><button type="button" data-auto-key="pollReminders">DM remindery</button><button type="button" data-auto-key="autoClosePolls">Auto close</button><button type="button" data-auto-key="matchReminders">Match DM</button><button type="button" data-auto-key="autoLineup">Auto lineup</button></div>
+          <div class="unified-actions"><button class="inline-action" id="runAutomation" type="button">Spustit cyklus teď</button></div><span class="action-message" id="automationMessage"></span>
+        </section>
+
+        <section class="panel member-block unified-admin" id="matchdayAdmin" data-admin-capability="sport" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">MATCHDAY CENTER</div><h2>Zápas + EA Sync</h2></div><span class="status-pill live-ok">NO EXTRA POLL</span></div>
+          <form id="matchCreateForm" class="unified-match-form"><label>Soupeř<input name="opponent" required maxlength="100" placeholder="Soupeř" /></label><label>Soutěž<input name="competition" maxlength="100" placeholder="Liga / turnaj / přátelák" /></label><label>Datum a čas<input name="startsAt" type="datetime-local" required /></label><label>Místo<select name="location"><option value="home">HOME</option><option value="away">AWAY</option><option value="neutral">NEUTRAL</option></select></label><label class="wide">Info<textarea name="description" maxlength="1000" placeholder="Poznámka k zápasu"></textarea></label><div class="unified-actions wide"><button class="btn btn-primary" type="submit">Vytvořit Matchday</button></div></form>
+          <div class="eyebrow unified-subtitle">EA / RESULT</div><div class="unified-form-grid"><label>Zápas<select id="matchdayMatchSelect"><option value="">Všechny / poslední</option></select></label></div><div class="unified-actions"><button class="inline-action" id="runEaSync" type="button">EA Sync teď</button><button class="inline-action" id="publishMatchResult" type="button">Publikovat výsledek</button></div>
+          <span class="action-message" id="matchdayAdminMessage"></span>
+        </section>
+
         <section class="panel member-block admin-request-center" id="adminRequestCenter" data-admin-capability="recruitment" hidden>
           <div class="member-block-head"><div><div class="eyebrow">PUBLIC REQUESTS</div><h2>Nábor & Merch inbox</h2></div><button class="inline-action" id="refreshAdminRequests" type="button">Obnovit</button></div>
           <div class="admin-request-tabs" role="tablist" aria-label="Filtr požadavků">
@@ -161,12 +194,23 @@
           <div class="admin-request-list" id="adminRequestList"><div class="empty-inline">Požadavky se načtou po otevření Managementu.</div></div>
         </section>
 
-        <section class="panel member-block admin-security-note"><div class="eyebrow">AUTOMATIC ACCESS</div><h2>Práva se řídí Discordem a Managerem.</h2><p>Web oprávnění nevymýšlí ani neukládá. Owner má plný přístup. Club Admin a Team Admin dostávají jen své akce podle Discord rolí. Odebrání role, kick nebo odchod z klubu se při dalším ověření automaticky projeví a privátní API se uzamkne.</p><div class="admin-health-row"><span><i></i> Website</span><span><i></i> Manager API</span><span><i></i> Discord</span><span><i></i> Access Control</span></div></section>
+        <section class="panel member-block platform-status-center" id="platformStatusCenter">
+          <div class="member-block-head"><div><div class="eyebrow">UNIFIED OBSERVABILITY</div><h2>Platform Status Center</h2></div><span class="status-pill live-ok">REALTIME</span></div>
+          <div class="platform-status-grid" id="platformStatusGrid"><div class="empty-inline">Čekám na platform heartbeat…</div></div>
+          <div class="platform-analytics-grid" id="platformAnalyticsGrid"></div>
+          <p class="admin-help" id="eventReplayState">Event replay se načítá…</p>
+        </section>
+        <section class="panel member-block owner-only audit-timeline-center" id="auditTimelineCenter" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">OWNER • CROSS-PLATFORM</div><h2>Audit Timeline</h2></div><span class="status-pill">READ ONLY</span></div>
+          <div class="audit-timeline-list" id="auditTimelineList"><div class="empty-inline">Zatím bez událostí.</div></div>
+        </section>
+
+        <section class="panel member-block admin-security-note"><div class="eyebrow">AUTOMATIC ACCESS</div><h2>Práva se řídí Discordem a Managerem.</h2><p>Web oprávnění nevymýšlí ani neukládá. Owner má plný přístup. Club Admin a Team Admin dostávají jen své akce podle Discord rolí. Odebrání role, kick nebo odchod z klubu se při dalším ověření automaticky projeví a privátní API se uzamkne.</p><div class="admin-health-row"><span id="healthWebsite"><i></i> Website LIVE</span><span id="healthManager"><i></i> Manager API LIVE</span><span id="healthDiscord"><i></i> Discord</span><span id="healthEa"><i></i> EA Sync</span></div></section>
       </section>
 
       <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS ERROR</div><h2>Club OS se nepodařilo načíst.</h2><p id="memberErrorText">Pro vstup musí být Discord účet aktivním členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login?mode=club">Ověřit znovu</a></section>
     </section>
   </main>
-  <script src="members.js?v=2.1.0"></script>
+  <script src="members.js?v=2.4.0"></script>
 </body>
 </html>
