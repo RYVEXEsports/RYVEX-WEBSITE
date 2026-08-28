@@ -8,6 +8,7 @@ const PERMISSION_ALIASES = {
   announcement: ['canCreateAnnouncement','createAnnouncement','manageAnnouncements','announcements','canManageAnnouncements'],
   recruitment: ['canManageRecruitment','manageRecruitment','recruitment'],
   sport: ['canManageLineups','canManageMatches','canManageAttendance','canManageStatistics','canManageActivity'],
+  system: ['canManageSystem','canViewPlayerWatch','canViewAccessControl','canViewAudit','canRunEaSync'],
   management: ['canManageClub','manageClub','canManage','management']
 };
 function hasPermission(live, capability) {
@@ -16,7 +17,7 @@ function hasPermission(live, capability) {
   if (PERMISSION_ALIASES.management.some(k => p[k] === true)) return true;
   return (PERMISSION_ALIASES[capability] || []).some(k => p[k] === true);
 }
-function canOpenManagement(live) { return hasPermission(live,'poll') || hasPermission(live,'announcement') || hasPermission(live,'recruitment') || hasPermission(live,'sport'); }
+function canOpenManagement(live) { return hasPermission(live,'poll') || hasPermission(live,'announcement') || hasPermission(live,'recruitment') || hasPermission(live,'sport') || hasPermission(live,'system'); }
 
 function node(tag, cls = '', text = '') {
   const n = document.createElement(tag);
@@ -233,6 +234,16 @@ function renderPlatformObservability(live){
   const audit=clear($('auditTimelineList')),rows=live?.centers?.auditTimeline?.rows||[];rows.slice(0,40).forEach(row=>{const item=node('div','audit-timeline-row'),pill=node('span',`audit-source ${row.source||'manager'}`,String(row.source||'manager').toUpperCase()),copy=node('div');copy.append(node('b','',text(row.action,'change')),node('small','',`${text(row.actor,'system')} • ${fmt(row.at).full}`));item.append(pill,copy);audit.append(item)});if(audit&&!audit.children.length)audit.append(node('div','empty-inline','Zatím bez cross-platform událostí.'));
 }
 
+
+function renderManagerMirror(live){
+  const centers=live?.centers||{}, perms=live?.permissions||{}, admin=centers.admin||{}, features=Array.isArray(centers.features)?centers.features:[], links=centers.platforms?.links||{};
+  for(const grid of [$('featureMirrorGrid'),$('featureMirrorGridPublic')].filter(Boolean)){clear(grid);features.forEach(f=>{const row=node('article',`feature-mirror-row ${f.canControl?'control':''}`),ico=node('span','',f.emoji||'•'),copy=node('div');copy.append(node('b','',text(f.label,f.key)),node('small','',`${text(f.scope,'club')} • ${f.canControl?'ROLE CONTROL':'NÁHLED'}`));row.append(ico,copy);grid.append(row)});if(!grid.children.length)grid.append(node('div','empty-inline','Feature catalog se načte z Manageru 5.11.'));}
+  const watch=admin.playerWatch||{},wbody=clear($('playerWatchRows'));(watch.rows||[]).slice(0,50).forEach(r=>{const row=node('div','player-watch-row'),stateDot=node('span','',r.online?'🟢':'⚫'),copy=node('div');copy.append(node('b','',text(r.name,'Hráč')),node('small','',`${r.eaName?`EA ${r.eaName} • `:''}${r.inRyvex===true?'✅ RYVEX roster':r.inRyvex===false?'⚠️ mimo RYVEX roster':'❔ EA roster neověřen'}${r.voiceChannelName?` • 🔊 ${r.voiceChannelName}`:''}`));row.append(stateDot,copy);wbody?.append(row)});if(wbody&&!wbody.children.length)wbody.append(node('div','empty-inline','Player Watch zatím bez řádků.'));
+  if($('pwTotal'))$('pwTotal').textContent=watch.summary?.tracked??watch.rows?.length??0;if($('pwOnline'))$('pwOnline').textContent=watch.summary?.online??0;if($('pwRoster'))$('pwRoster').textContent=watch.summary?.inRyvex??0;if($('pwMismatch'))$('pwMismatch').textContent=watch.summary?.outsideRyvex??0;
+  const access=admin.accessControl||{};if($('accessOwnerLock'))$('accessOwnerLock').textContent=access.ownerLock?'ON':'CHECK';if($('accessSource'))$('accessSource').textContent=text(access.sourceOfTruth,'Manager');const roleBox=clear($('accessRoleCounts'));Object.entries(access.roleCounts||{}).forEach(([k,v])=>{const r=node('div','unified-row'),copy=node('div');copy.append(node('b','',k),node('small','','Discord role scope'));r.append(copy,node('strong','',v));roleBox?.append(r)});
+  const linkBox=clear($('platformDeepLinks'));[['App',links.app],['Website',links.website],['Tournament HQ',(perms.isOwner||perms.canViewTournamentAdmin)?links.tournament:null]].forEach(([label,url])=>{const safe=safeHttpUrl(url);if(!safe)return;const a=node('a','inline-action',label+' ↗');a.href=safe;a.target='_blank';a.rel='noreferrer';linkBox?.append(a)});
+}
+
 function renderUnifiedManagement(live){
   const owner=!!live.permissions?.isOwner, centers=live.centers||{}, voting=centers.voting||{}, lineupCenter=centers.lineup||{}, automation=centers.automation||{}, l=lineupCenter.active||live.lineup||null;
   document.querySelectorAll('.owner-only').forEach(x=>x.hidden=!owner);
@@ -250,21 +261,24 @@ function renderUnifiedManagement(live){
   const autoSettings=automation.settings||{}; document.querySelectorAll('[data-auto-key]').forEach(b=>{const on=Boolean(autoSettings[b.dataset.autoKey]);b.classList.toggle('active',on);b.dataset.enabled=on?'1':'0';const base={enabled:'Automatizace',pollReminders:'DM remindery',autoClosePolls:'Auto close',matchReminders:'Match DM',autoLineup:'Auto lineup'}[b.dataset.autoKey]||b.dataset.autoKey;b.textContent=`${base}: ${on?'ZAP':'VYP'}`;});
   const health=centers.health||{}; if($('healthDiscord'))$('healthDiscord').lastChild.textContent=` Discord ${health.discord?'ONLINE':'OFFLINE'}`; if($('healthEa'))$('healthEa').lastChild.textContent=` EA ${health.ea?.enabled?(health.ea?.lastError?'CHECK':'ONLINE'):'OFF'}`; if($('healthManager'))$('healthManager').lastChild.textContent=` Manager API ${centers.realtime?.transport==='sse'?'REALTIME':'LIVE'}`;
   renderPlatformObservability(live);
+  renderManagerMirror(live);
 }
 
 function renderManagement(live){
-  const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canRecruitment=hasPermission(live,'recruitment'), canSport=hasPermission(live,'sport'), canManage=canPoll||canAnnouncement||canRecruitment||canSport;
+  const owner=!!live.permissions?.isOwner, canPoll=hasPermission(live,'poll'), canAnnouncement=hasPermission(live,'announcement'), canRecruitment=hasPermission(live,'recruitment'), canSport=hasPermission(live,'sport'), canSystem=hasPermission(live,'system'), canManage=canPoll||canAnnouncement||canRecruitment||canSport||canSystem;
   document.querySelectorAll('.management-only').forEach(x=>x.hidden=!canManage);
+  document.querySelectorAll('.audit-allowed').forEach(x=>x.hidden=!(owner||live.permissions?.canViewAudit));
   if($('mobileManagement'))$('mobileManagement').hidden=!canManage;
   document.querySelectorAll('[data-admin-capability="poll"]').forEach(x=>x.hidden=!canPoll);
   document.querySelectorAll('[data-admin-capability="announcement"]').forEach(x=>x.hidden=!canAnnouncement);
   document.querySelectorAll('[data-admin-capability="recruitment"]').forEach(x=>x.hidden=!canRecruitment);
   document.querySelectorAll('[data-admin-capability="sport"]').forEach(x=>x.hidden=!canSport);
-  setCapabilityCard('capPoll',canPoll); setCapabilityCard('capAnnouncement',canAnnouncement); setCapabilityCard('capRecruitment',canRecruitment); setCapabilityCard('capSport',canSport,owner?'FULL CONTROL':'ROLE CONTROL');
+  document.querySelectorAll('[data-admin-capability="system"]').forEach(x=>x.hidden=!canSystem);
+  setCapabilityCard('capPoll',canPoll); setCapabilityCard('capAnnouncement',canAnnouncement); setCapabilityCard('capRecruitment',canRecruitment); setCapabilityCard('capSport',canSport,owner?'FULL CONTROL':'ROLE CONTROL'); setCapabilityCard('capSystem',canSystem,owner?'OWNER FULL':'ADMIN SCOPE');
   renderActivePollAdmin(live,canPoll); renderUnifiedManagement(live);
   if($('managementBadge'))$('managementBadge').textContent=owner?'OWNER • FULL ACCESS':'DISCORD ROLE • CONTROL';
   if($('managementScope')){
-    const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ'); if(canRecruitment)roles.push('NÁBOR'); if(canSport)roles.push('SPORT');
+    const roles=[]; if(owner)roles.push('OWNER'); if(canPoll)roles.push('HLASOVÁNÍ'); if(canAnnouncement)roles.push('OZNÁMENÍ'); if(canRecruitment)roles.push('NÁBOR'); if(canSport)roles.push('SPORT'); if(canSystem)roles.push('SYSTEM');
     $('managementScope').textContent=roles.length?roles.join(' • '):'READ ONLY';
   }
   if(canRecruitment&&state.page==='management')loadAdminRequests(false).catch(()=>{});
@@ -317,3 +331,13 @@ setInterval(()=>loadState(true),30000);
 setInterval(()=>{if(state.page==='chat'&&state.chatChannelId)loadChatMessages().catch(()=>{})},10000);
 setInterval(()=>{if(state.page==='voice')loadVoice().catch(()=>{})},15000);
 window.addEventListener('beforeunload',()=>realtimeSource?.close?.());
+
+
+// RYVEX Website 2.5 — Manager 5.11 system controls
+const systemOp=(id,action,ok)=>$(id)?.addEventListener('click',async e=>{setBusy(e.currentTarget,true);setMessage('systemControlMessage','Pracuji…');try{await ops({action,...(action==='system.integrity'?{repair:true}:{})});setMessage('systemControlMessage',ok);await loadState(true)}catch(err){setMessage('systemControlMessage',`Chyba: ${err.message}`)}finally{setBusy(e.currentTarget,false)}});
+systemOp('playerWatchRefresh','player_watch.refresh','Player Watch + EA kontrola obnovena.');
+systemOp('systemEaSync','ea.sync','EA Sync dokončen.');
+systemOp('refreshDiscordCenters','system.refresh_centers','Discord centra obnovena.');
+systemOp('systemRepair','system.repair','System Repair dokončen.');
+systemOp('systemIntegrity','system.integrity','Full Integrity dokončena.');
+systemOp('accessReconcile','access.reconcile','Access Control znovu aplikován.');

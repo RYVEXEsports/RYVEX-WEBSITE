@@ -97,6 +97,7 @@
         </div>
         <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">LIVE POLL</div><h2 id="overviewPollTitle">Hlasování</h2></div><button class="inline-action" data-goto="vote">Otevřít</button></div><div id="overviewPoll"></div></section>
         <section class="os-system-strip panel"><div><small>SOURCE OF TRUTH</small><b id="systemSource">Discord + RYVEX Manager + EA FC 26</b></div><div><small>LAST SYNC</small><b id="lastSync">—</b></div><div><small>ACCESS</small><b id="accessLevel">MEMBER</b></div><div><small>STATUS</small><b class="live-text">LIVE</b></div></section>
+        <section class="panel member-block"><div class="member-block-head"><div><div class="eyebrow">MANAGER FEATURE MIRROR</div><h2>Co je propojené</h2></div><span class="status-pill">READ / ROLE BASED</span></div><p class="admin-help">Funkce se načítají z Manageru. Řídicí tlačítka se zobrazují jen rolím, kterým je Manager server-side povolí.</p><div class="feature-mirror-grid" id="featureMirrorGridPublic"></div></section>
       </section>
 
       <section class="os-page" data-page-panel="vote">
@@ -138,6 +139,7 @@
           <article class="panel admin-capability" data-capability-card="announcement"><small>02</small><div><b>Oznámení</b><span id="capAnnouncement">Kontroluji…</span></div></article>
           <article class="panel admin-capability" data-capability-card="recruitment"><small>03</small><div><b>Nábor & Merch</b><span id="capRecruitment">Kontroluji…</span></div></article>
           <article class="panel admin-capability" data-capability-card="sport"><small>04</small><div><b>Sportovní řízení</b><span id="capSport">Kontroluji…</span></div></article>
+          <article class="panel admin-capability" data-capability-card="system"><small>05</small><div><b>System & Security</b><span id="capSystem">Kontroluji…</span></div></article>
         </section>
 
         <section class="panel member-block admin-live-control" id="activePollAdmin" data-admin-capability="poll" hidden>
@@ -194,14 +196,31 @@
           <div class="admin-request-list" id="adminRequestList"><div class="empty-inline">Požadavky se načtou po otevření Managementu.</div></div>
         </section>
 
+        <section class="panel member-block manager-feature-mirror" id="managerFeatureMirror">
+          <div class="member-block-head"><div><div class="eyebrow">MANAGER 5.11 • FEATURE MIRROR</div><h2>Manager funkce na webu</h2></div><span class="status-pill live-ok">RBAC LIVE</span></div>
+          <p class="admin-help">Katalog center a funkcí přichází přímo z Manageru. Hráč vidí povolený obsah; řídicí akce zůstávají jen rolím s odpovídajícím server-side oprávněním.</p>
+          <div class="feature-mirror-grid" id="featureMirrorGrid"></div><div class="unified-actions" id="platformDeepLinks"></div>
+        </section>
+        <section class="panel member-block unified-admin" id="playerWatchWeb" data-admin-capability="system" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">PLAYER WATCH • ADMIN</div><h2>Kontrola hráčů</h2></div><button class="inline-action" id="playerWatchRefresh" type="button">Check now</button></div>
+          <div class="platform-analytics-grid"><div class="platform-analytics-card"><strong id="pwTotal">0</strong><span>HRÁČI</span></div><div class="platform-analytics-card"><strong id="pwOnline">0</strong><span>ONLINE</span></div><div class="platform-analytics-card"><strong id="pwRoster">0</strong><span>EA ROSTER OK</span></div><div class="platform-analytics-card"><strong id="pwMismatch">0</strong><span>MIMO ROSTER</span></div></div>
+          <div class="player-watch-web" id="playerWatchRows"></div>
+        </section>
+        <section class="panel member-block unified-admin" id="systemSecurityWeb" data-admin-capability="system" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">ZERO TRUST • RBAC</div><h2>System & Security Control</h2></div><span class="status-pill">SERVER SIDE</span></div>
+          <div class="os-system-strip"><div><small>OWNER LOCK</small><b id="accessOwnerLock">—</b></div><div><small>SOURCE</small><b id="accessSource">Manager</b></div></div>
+          <div class="unified-actions"><button class="inline-action" id="systemEaSync" type="button">EA Sync</button><button class="inline-action" id="refreshDiscordCenters" type="button">Refresh Centers</button><button class="inline-action" id="systemRepair" type="button">System Repair</button><button class="inline-action" id="systemIntegrity" type="button">Full Integrity</button><button class="inline-action" id="accessReconcile" type="button">Access Reconcile</button></div>
+          <span class="action-message" id="systemControlMessage"></span><div class="unified-list" id="accessRoleCounts"></div>
+        </section>
+
         <section class="panel member-block platform-status-center" id="platformStatusCenter">
           <div class="member-block-head"><div><div class="eyebrow">UNIFIED OBSERVABILITY</div><h2>Platform Status Center</h2></div><span class="status-pill live-ok">REALTIME</span></div>
           <div class="platform-status-grid" id="platformStatusGrid"><div class="empty-inline">Čekám na platform heartbeat…</div></div>
           <div class="platform-analytics-grid" id="platformAnalyticsGrid"></div>
           <p class="admin-help" id="eventReplayState">Event replay se načítá…</p>
         </section>
-        <section class="panel member-block owner-only audit-timeline-center" id="auditTimelineCenter" hidden>
-          <div class="member-block-head"><div><div class="eyebrow">OWNER • CROSS-PLATFORM</div><h2>Audit Timeline</h2></div><span class="status-pill">READ ONLY</span></div>
+        <section class="panel member-block audit-allowed audit-timeline-center" id="auditTimelineCenter" hidden>
+          <div class="member-block-head"><div><div class="eyebrow">ADMIN / OWNER • CROSS-PLATFORM</div><h2>Audit Timeline</h2></div><span class="status-pill">READ ONLY</span></div>
           <div class="audit-timeline-list" id="auditTimelineList"><div class="empty-inline">Zatím bez událostí.</div></div>
         </section>
 
@@ -211,6 +230,6 @@
       <section class="panel member-error" id="memberError" hidden><div class="eyebrow">ACCESS ERROR</div><h2>Club OS se nepodařilo načíst.</h2><p id="memberErrorText">Pro vstup musí být Discord účet aktivním členem RYVEX Esports.</p><a class="btn btn-primary" href="/auth/login?mode=club">Ověřit znovu</a></section>
     </section>
   </main>
-  <script src="members.js?v=2.4.0"></script>
+  <script src="members.js?v=2.5.0"></script>
 </body>
 </html>

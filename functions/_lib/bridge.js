@@ -78,7 +78,7 @@ export function sanitizePublicState(body) {
 
 export async function fetchBotState(env, viewerId) {
   const base = String(env.RYVEX_BOT_API_URL || "").replace(/\/$/, "");
-  const key = String(env.RYVEX_BOT_API_KEY || "");
+  const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || "");
   const viewer = String(viewerId || "");
   if (!/^https:\/\//i.test(base) || !key || !/^\d{15,25}$/.test(viewer)) {
     return { ok: false, status: 503, error: "live_bridge_not_configured" };
@@ -89,7 +89,7 @@ export async function fetchBotState(env, viewerId) {
       headers: {
         "Accept": "application/json",
         "X-RYVEX-API-KEY": key,
-        "X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.4.0","X-RYVEX-USER-ID": viewer
+        "X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.5.0","X-RYVEX-USER-ID": viewer
       },
       cf: { cacheTtl: 5, cacheEverything: false }
     });

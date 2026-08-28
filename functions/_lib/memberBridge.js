@@ -27,9 +27,21 @@ export async function requireMember(request, env) {
   return { ok: true, session, access };
 }
 
+
+export function memberHasPermission(gate, permission) {
+  const permissions = gate?.access?.permissions || {};
+  return permissions.isOwner === true || permissions?.[permission] === true;
+}
+export function memberIsOwner(gate) {
+  return gate?.access?.permissions?.isOwner === true || gate?.access?.level === 'owner';
+}
+export function permissionDenied(permission, gate) {
+  return json({ ok:false, error:permission === 'owner' ? 'owner_required' : 'permission_required', permission, access:gate?.access?.level || null }, 403);
+}
+
 function bridgeConfig(env) {
   const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
-  const key = String(env.RYVEX_BOT_API_KEY || '');
+  const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   return { base, key, configured: /^https:\/\//i.test(base) && !!key };
 }
 
@@ -43,7 +55,7 @@ export async function bridgeFetch(env, userId, path, init = {}) {
     headers.set('Accept', 'application/json');
     headers.set('X-RYVEX-API-KEY', key);
     headers.set('X-RYVEX-PLATFORM', 'website');
-    headers.set('X-RYVEX-PLATFORM-VERSION', '2.4.1');
+    headers.set('X-RYVEX-PLATFORM-VERSION', '2.5.0');
     headers.set('X-RYVEX-USER-ID', String(userId));
     if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     const response = await fetch(`${base}${path}`, { ...init, headers });

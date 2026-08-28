@@ -4,7 +4,7 @@ function cleanLevel(value) {
 
 function managerConfig(env) {
   const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
-  const key = String(env.RYVEX_BOT_API_KEY || '');
+  const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   return { base, key, configured: /^https:\/\//i.test(base) && !!key };
 }
 
@@ -48,7 +48,7 @@ async function callManager(env, userId, path) {
       headers: {
         'Accept': 'application/json',
         'X-RYVEX-API-KEY': key,
-        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.4.0','X-RYVEX-USER-ID': String(userId)
+        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.5.0','X-RYVEX-USER-ID': String(userId)
       },
       cf: { cacheEverything: false }
     });

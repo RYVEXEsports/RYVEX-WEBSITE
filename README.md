@@ -1,3 +1,9 @@
+# RYVEX Website 2.5.0 — Unified Secure Sync
+
+Website 2.5 mirrors Manager 5.11 and applies server-side RBAC before every sensitive proxy write. See `RELEASE-NOTES-2.5.0.md`.
+
+---
+
 # RYVEX Esports Website 2.1.0 — MASTER
 
 Kompletní černo-zlatá RYVEX Website vrstva se zachovaným designem a strukturou. Verze 2.1.0 slučuje Premium Sharp, Club OS access control, Fan Zone, role-based management a plný sync s RYVEX Managerem 5.1.0.
