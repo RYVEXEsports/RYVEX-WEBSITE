@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env }) {
   const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   if (!/^https:\/\//i.test(base) || !key) return json({ ok:false, error:'live_bridge_not_configured' }, 503);
   try {
-    const headers={ 'Accept':'text/event-stream', 'X-RYVEX-API-KEY':key, 'X-RYVEX-PLATFORM':'website', 'X-RYVEX-PLATFORM-VERSION':'2.5.0', 'X-RYVEX-USER-ID':String(gate.session.sub) };
+    const headers={ 'Accept':'text/event-stream', 'X-RYVEX-API-KEY':key, 'X-RYVEX-PLATFORM':'website', 'X-RYVEX-PLATFORM-VERSION':'2.5.1', 'X-RYVEX-USER-ID':String(gate.session.sub) };
     const lastEventId=request.headers.get('Last-Event-ID')||''; if(/^\d+$/.test(lastEventId))headers['Last-Event-ID']=lastEventId;
     const upstream = await fetch(`${base}/api/v1/stream`, { headers, cf:{cacheEverything:false} });
     if (!upstream.ok || !upstream.body) { const body = await upstream.json().catch(() => ({ ok:false, error:'stream_unavailable' })); return json(body, upstream.status || 502); }

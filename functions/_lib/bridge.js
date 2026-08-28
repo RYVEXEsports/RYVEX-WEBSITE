@@ -85,19 +85,15 @@ export async function fetchBotState(env, viewerId) {
   }
 
   try {
-    const response = await fetch(`${base}/api/v1/state`, {
-      headers: {
-        "Accept": "application/json",
-        "X-RYVEX-API-KEY": key,
-        "X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.5.0","X-RYVEX-USER-ID": viewer
-      },
-      cf: { cacheTtl: 5, cacheEverything: false }
-    });
-    const body = await response.json().catch(() => null);
-    if (!response.ok || !body?.ok) {
-      return { ok: false, status: 502, error: body?.error || "bridge_error", bridgeStatus: response.status };
-    }
-    return { ok: true, body };
+    const call=async(path)=>{
+      const response=await fetch(`${base}${path}`,{headers:{"Accept":"application/json","X-RYVEX-API-KEY":key,"X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.5.1","X-RYVEX-USER-ID":viewer},cf:{cacheTtl:5,cacheEverything:false}});
+      const body=await response.json().catch(()=>null);return {response,body};
+    };
+    let out=await call('/api/v1/state');
+    if(!out.response.ok||!out.body?.ok)out=await call('/api/v1/state-core');
+    if(!out.response.ok||!out.body?.ok)out=await call('/api/v1/state-lite');
+    if(!out.response.ok||!out.body?.ok)return {ok:false,status:502,error:out.body?.error||"bridge_error",bridgeStatus:out.response.status};
+    return {ok:true,body:out.body};
   } catch {
     return { ok: false, status: 502, error: "bridge_unreachable" };
   }

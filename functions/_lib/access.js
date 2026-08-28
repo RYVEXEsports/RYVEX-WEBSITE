@@ -48,7 +48,7 @@ async function callManager(env, userId, path) {
       headers: {
         'Accept': 'application/json',
         'X-RYVEX-API-KEY': key,
-        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.5.0','X-RYVEX-USER-ID': String(userId)
+        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.5.1','X-RYVEX-USER-ID': String(userId)
       },
       cf: { cacheEverything: false }
     });

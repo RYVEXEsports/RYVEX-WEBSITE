@@ -69,7 +69,7 @@ export async function forwardPublicRequest(env, session, type, data) {
           'Accept': 'application/json',
           'X-RYVEX-API-KEY': key,
           'X-RYVEX-PLATFORM': 'website',
-          'X-RYVEX-PLATFORM-VERSION': '2.5.0',
+          'X-RYVEX-PLATFORM-VERSION': '2.5.1',
           'X-RYVEX-USER-ID': String(session.sub)
         },
         body: JSON.stringify(payload)

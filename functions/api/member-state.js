@@ -5,6 +5,7 @@ export async function onRequestGet({ request, env }) {
   if (!gate.ok) return gate.response;
   let out = await bridgeFetch(env, gate.session.sub, '/api/v1/state');
   if (!out.ok) out = await bridgeFetch(env, gate.session.sub, '/api/v1/state-core');
+  if (!out.ok) out = await bridgeFetch(env, gate.session.sub, '/api/v1/state-lite');
   if (!out.ok) return json(out.body, out.status);
   return json({
     ...out.body,

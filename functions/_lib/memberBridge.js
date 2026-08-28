@@ -55,7 +55,7 @@ export async function bridgeFetch(env, userId, path, init = {}) {
     headers.set('Accept', 'application/json');
     headers.set('X-RYVEX-API-KEY', key);
     headers.set('X-RYVEX-PLATFORM', 'website');
-    headers.set('X-RYVEX-PLATFORM-VERSION', '2.5.0');
+    headers.set('X-RYVEX-PLATFORM-VERSION', '2.5.1');
     headers.set('X-RYVEX-USER-ID', String(userId));
     if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     const response = await fetch(`${base}${path}`, { ...init, headers });
