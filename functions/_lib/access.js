@@ -1,9 +1,10 @@
+import {WEBSITE_VERSION} from './version.js';
 function cleanLevel(value) {
   return String(value || '').trim().toLowerCase();
 }
 
 function managerConfig(env) {
-  const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
+  const base = String((env.RYVEX_CORE_API_URL||env.RYVEX_BOT_API_URL) || '').replace(/\/$/, '');
   const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   return { base, key, configured: /^https:\/\//i.test(base) && !!key };
 }
@@ -48,7 +49,7 @@ async function callManager(env, userId, path) {
       headers: {
         'Accept': 'application/json',
         'X-RYVEX-API-KEY': key,
-        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':'2.5.1','X-RYVEX-USER-ID': String(userId)
+        'X-RYVEX-PLATFORM':'website','X-RYVEX-PLATFORM-VERSION':WEBSITE_VERSION,'X-RYVEX-USER-ID': String(userId)
       },
       cf: { cacheEverything: false }
     });

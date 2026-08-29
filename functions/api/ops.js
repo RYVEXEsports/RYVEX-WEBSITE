@@ -8,7 +8,10 @@ const RULES = [
   [/^match\./, 'canManageMatches'],
   [/^ea\.sync$/, 'canRunEaSync'],
   [/^player_watch\.refresh$/, 'canViewPlayerWatch'],
-  [/^(system\.(refresh_centers|repair|integrity)|access\.reconcile)$/, 'canManageSystem']
+  [/^system\.refresh_centers$/, 'canRefreshCenters'],
+  [/^system\.repair$/, 'canRunSystemRepair'],
+  [/^system\.integrity$/, 'canRunIntegrityCheck'],
+  [/^access\.reconcile$/, 'canReconcileAccess']
 ];
 function requiredPermission(action){for(const [rx,perm] of RULES)if(rx.test(action))return perm;return null;}
 export async function onRequestPost({ request, env }) {

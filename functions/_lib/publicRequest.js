@@ -1,3 +1,4 @@
+import {WEBSITE_VERSION} from './version.js';
 import { parseCookies, verifySession } from './session.js';
 
 const JSON_HEADERS = {
@@ -45,7 +46,7 @@ async function discordWebhook(env, payload) {
 }
 
 export async function forwardPublicRequest(env, session, type, data) {
-  const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
+  const base = String((env.RYVEX_CORE_API_URL||env.RYVEX_BOT_API_URL) || '').replace(/\/$/, '');
   const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   const payload = {
     type,
@@ -69,7 +70,7 @@ export async function forwardPublicRequest(env, session, type, data) {
           'Accept': 'application/json',
           'X-RYVEX-API-KEY': key,
           'X-RYVEX-PLATFORM': 'website',
-          'X-RYVEX-PLATFORM-VERSION': '2.5.1',
+          'X-RYVEX-PLATFORM-VERSION': WEBSITE_VERSION,
           'X-RYVEX-USER-ID': String(session.sub)
         },
         body: JSON.stringify(payload)

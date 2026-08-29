@@ -1,3 +1,4 @@
+import {WEBSITE_VERSION} from './version.js';
 import { parseCookies, verifySession } from './session.js';
 import { checkManagerClubAccess } from './access.js';
 
@@ -40,7 +41,7 @@ export function permissionDenied(permission, gate) {
 }
 
 function bridgeConfig(env) {
-  const base = String(env.RYVEX_BOT_API_URL || '').replace(/\/$/, '');
+  const base = String((env.RYVEX_CORE_API_URL||env.RYVEX_BOT_API_URL) || '').replace(/\/$/, '');
   const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || '');
   return { base, key, configured: /^https:\/\//i.test(base) && !!key };
 }
@@ -55,7 +56,7 @@ export async function bridgeFetch(env, userId, path, init = {}) {
     headers.set('Accept', 'application/json');
     headers.set('X-RYVEX-API-KEY', key);
     headers.set('X-RYVEX-PLATFORM', 'website');
-    headers.set('X-RYVEX-PLATFORM-VERSION', '2.5.1');
+    headers.set('X-RYVEX-PLATFORM-VERSION', WEBSITE_VERSION);
     headers.set('X-RYVEX-USER-ID', String(userId));
     if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     const response = await fetch(`${base}${path}`, { ...init, headers });

@@ -1,3 +1,4 @@
+import {WEBSITE_VERSION} from './version.js';
 function cleanText(value, max = 120) {
   return String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, " ").trim().slice(0, max);
 }
@@ -77,7 +78,7 @@ export function sanitizePublicState(body) {
 }
 
 export async function fetchBotState(env, viewerId) {
-  const base = String(env.RYVEX_BOT_API_URL || "").replace(/\/$/, "");
+  const base = String((env.RYVEX_CORE_API_URL||env.RYVEX_BOT_API_URL) || "").replace(/\/$/, "");
   const key = String((env.RYVEX_WEBSITE_API_KEY||env.RYVEX_BOT_API_KEY) || "");
   const viewer = String(viewerId || "");
   if (!/^https:\/\//i.test(base) || !key || !/^\d{15,25}$/.test(viewer)) {
@@ -86,7 +87,7 @@ export async function fetchBotState(env, viewerId) {
 
   try {
     const call=async(path)=>{
-      const response=await fetch(`${base}${path}`,{headers:{"Accept":"application/json","X-RYVEX-API-KEY":key,"X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":"2.5.1","X-RYVEX-USER-ID":viewer},cf:{cacheTtl:5,cacheEverything:false}});
+      const response=await fetch(`${base}${path}`,{headers:{"Accept":"application/json","X-RYVEX-API-KEY":key,"X-RYVEX-PLATFORM":"website","X-RYVEX-PLATFORM-VERSION":WEBSITE_VERSION,"X-RYVEX-USER-ID":viewer},cf:{cacheTtl:5,cacheEverything:false}});
       const body=await response.json().catch(()=>null);return {response,body};
     };
     let out=await call('/api/v1/state');

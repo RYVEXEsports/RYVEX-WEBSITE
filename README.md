@@ -1,6 +1,6 @@
-# RYVEX Website 2.5.0 — Unified Secure Sync
+# RYVEX Website 2.6.0 — Unified Secure Sync
 
-Website 2.5 mirrors Manager 5.11 and applies server-side RBAC before every sensitive proxy write. See `RELEASE-NOTES-2.5.0.md`.
+Website 2.6 mirrors Manager 5.12 and applies server-side RBAC before every sensitive proxy write. See `RELEASE-NOTES-2.5.0.md`.
 
 ---
 
