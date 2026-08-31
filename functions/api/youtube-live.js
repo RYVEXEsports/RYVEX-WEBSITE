@@ -1,34 +1,32 @@
-const headers = {
-  "Content-Type": "application/json; charset=utf-8",
-  "Cache-Control": "public, max-age=30, s-maxage=45, stale-while-revalidate=60",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "X-Frame-Options": "DENY"
-};
-function json(payload, status = 200) { return new Response(JSON.stringify(payload), { status, headers }); }
+import { requireMember, bridgeFetch, json } from '../_lib/memberBridge.js';
 
-export async function onRequestGet({ env }) {
-  const key = String(env.YOUTUBE_API_KEY || "").trim();
-  if (!key) return json({ ok: false, error: "youtube_api_not_configured", online: false }, 503);
+export async function onRequestGet({ request, env }) {
+  const gate = await requireMember(request, env);
+  if (!gate.ok) return gate.response;
   try {
-    const handle = "@AinslayCZ";
-    const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(key)}`);
-    const channelBody = await channelResponse.json();
-    const channel = channelBody?.items?.[0];
-    if (!channelResponse.ok || !channel?.id) return json({ ok: false, error: "youtube_channel_not_found", online: false }, 502);
-
-    const liveResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(channel.id)}&eventType=live&type=video&maxResults=1&key=${encodeURIComponent(key)}`);
-    const liveBody = await liveResponse.json();
-    if (!liveResponse.ok) return json({ ok: false, error: "youtube_live_lookup_failed", online: false }, 502);
-    const item = liveBody?.items?.[0];
-    if (!item?.id?.videoId) return json({ ok: true, online: false, channelTitle: channel.snippet?.title || "AinslayCZ" });
+    const out = await bridgeFetch(env, gate.session.sub, '/api/v1/state');
+    if (out.status >= 400 || !out.body?.ok) {
+      return json({ ok:false, error:out.body?.error||`core_${out.status}`, online:false, live:false }, out.status || 502);
+    }
+    const stream = out.body.stream || {};
+    const live = Boolean(stream.live);
     return json({
-      ok: true,
-      online: true,
-      videoId: String(item.id.videoId).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20),
-      title: String(item.snippet?.title || "AinslayCZ LIVE").slice(0, 160)
+      ok:true,
+      online:live,
+      live,
+      provider:stream.provider||'youtube',
+      channelId:stream.channelId||null,
+      videoId:stream.videoId||null,
+      url:stream.url||null,
+      embedUrl:stream.embedUrl||null,
+      title:stream.title||null,
+      thumbnail:stream.thumbnail||null,
+      concurrentViewers:stream.concurrentViewers||null,
+      checkedAt:stream.checkedAt||out.body.generatedAt||null,
+      stale:Boolean(stream.stale),
+      source:stream.source||'python-core'
     });
-  } catch {
-    return json({ ok: false, error: "youtube_unreachable", online: false }, 502);
+  } catch (e) {
+    return json({ ok:false, error:'core_unreachable', detail:String(e?.message||e), online:false, live:false }, 502);
   }
 }
